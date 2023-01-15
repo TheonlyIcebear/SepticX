@@ -1,4 +1,4 @@
-# SepticX
+# SepticX 🐀
 
 An advanced python Rat Client capable of many malicious tasks
 
