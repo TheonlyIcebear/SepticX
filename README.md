@@ -60,10 +60,10 @@ For Instructions.txt you can also change it to whatever you want but, if you wan
 
 # Getting a License
 
-This is only the Open Source version of the client, if you'd like to gain access to the more advanced features like, better obfuscation go to the Offical <a src="https://discord.gg/CFfTAYHyq5">Discord Server</a>
+This is only the Open Source version of the client, if you'd like to gain access to the more advanced features like, better obfuscation go to the Offical [Discord Server](https://discord.gg/CFfTAYHyq)
 
 # Support
-If you you'd like to report any bugs or ask for support go to my <a src="https://discord.gg/CFfTAYHyq5">Discord Server</a>
+If you you'd like to report any bugs or ask for support go to my [Discord Server](https://discord.gg/CFfTAYHyq)
 
 # Disclaimer
 
