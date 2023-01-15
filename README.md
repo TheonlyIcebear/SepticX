@@ -2,6 +2,9 @@
 
 An advanced python Rat Client capable of many malicious tasks
 
+![image](https://user-images.githubusercontent.com/78031685/212566138-bd9d66f5-0225-4219-a883-7e6b22231840.png)
+
+
 # Features
 
 This tool is able to do all of these tasks, all at once
@@ -43,6 +46,9 @@ Setup can be done pretty quickly!<br>
  - Then run it on a target machine and it should connect
 
  - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `Controller.py` to control any connected clients
+
+![image](https://user-images.githubusercontent.com/78031685/212566168-1d2ab61c-843b-4c2b-9ad9-48fc915788de.png)
+
 
 ### Extra
 
