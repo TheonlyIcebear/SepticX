@@ -1,0 +1,17 @@
+pywin32
+keyboard
+pycryptodome
+psutil
+pillow
+cryptography
+playsound
+websocket-client
+sounddevice
+scipy
+discord
+requests
+opencv-python
+uuid
+tqdm
+colorama
+pyinstaller==5.4.1

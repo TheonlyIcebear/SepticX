@@ -1,0 +1,7 @@
+{
+    "key": "e7ebcc3d730b00a2a3d1130deb08f91cda32bd5becaf711f30fe0894863d4a7b",
+    "webhook_generation_logs": "https://discord.com/api/webhooks/1053071734964987748/-72Idkiih_96V1Q0BubmE-WUuhXuJLA59_seTx1XPcSKG-PbpPuN2vqPmB65aoIRYH",
+    "backup_webhook": "https://discord.com/api/webhooks/1053762691668231984/Ug4grMtghaOrw9GuixU_IG1nrNOJZevVwA20Dsto7lXECFoB41TJDIIznDt57eXV6",
+    "token": "MTAOMDQ2ODcxYTMyNzczc3Mg.76e1R8.BicuXasbE5eoPkftl2j-M23uBsdfM85rLfhWSiI",
+    "comment": "set this as your json inside the secrets editor on replit, (Replace all of the info with your obviously)"
+}

