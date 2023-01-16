@@ -22,7 +22,7 @@ This tool is able to do all of these tasks, all at once
  - Incredibly Accurate VM Detection
  - Bypasses VirusTotal
  - Grab's all of Browser credentials, including, Passwords, Cookies, Browser History, and Payment Methods
- - Constantly searches for processes like `Process Hacker` or `Wire Shark` and closes them immideatly
+ - Constantly searches for processes like `Process Hacker` or `Wire Shark` and closes them immediately
  - Grab's Discord token's, and Roblox cookies
 
 # Setup
