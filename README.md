@@ -51,11 +51,10 @@ Setup can be done pretty quickly!<br>
 
  - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `controller.py` to control any connected clients
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/ewUIJRDY3pQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
 ![image](https://user-images.githubusercontent.com/78031685/212566168-1d2ab61c-843b-4c2b-9ad9-48fc915788de.png)
 
 
+[![Untitled(2)](https://user-images.githubusercontent.com/78031685/212621717-a016f6f3-2bee-4491-b73d-10bbd7595fed.jpg)](https://www.youtubepi.com/watch?v=ewUIJRDY3pQ&t=2s)
 
 
 ### Extra
