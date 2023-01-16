@@ -54,7 +54,7 @@ Setup can be done pretty quickly!<br>
 ![image](https://user-images.githubusercontent.com/78031685/212566168-1d2ab61c-843b-4c2b-9ad9-48fc915788de.png)
 
 
-[![Untitled(2)](https://user-images.githubusercontent.com/78031685/212621717-a016f6f3-2bee-4491-b73d-10bbd7595fed.jpg)](https://www.youtubepi.com/watch?v=ewUIJRDY3pQ&t=2s)
+[![Untitled(2)](https://user-images.githubusercontent.com/78031685/212621717-a016f6f3-2bee-4491-b73d-10bbd7595fed.jpg)](https://www.youtube.com/watch?v=ewUIJRDY3pQ&t=2s)
 
 
 ### Extra
