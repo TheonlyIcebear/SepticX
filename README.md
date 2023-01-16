@@ -38,7 +38,7 @@ Setup can be done pretty quickly!<br>
 
     - For `t` replace it with your a discord token, so it can dynamically
 
-    - `webhook_generation_logs` is the channel where the log of all webhooks being generated will go and `backup_webhook` is a backup token incase it fails to create a webhook
+    - `webhook_generation_logs` is the channel where the log of all webhooks being generated will go and `backup_webhook` is a backup webhook incase it fails to create a webhook
 
  - On the replit on main.py there will be two variables called `channel_id` and `channel_id2` set them to two different discord channel id's so incase one has a ratelimit the log is still sent
 
