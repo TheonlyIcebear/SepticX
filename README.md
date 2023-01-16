@@ -27,8 +27,6 @@ This tool is able to do all of these tasks, all at once
 
 # Setup
 
-[![Tutorial](https://user-images.githubusercontent.com/78031685/212620832-f1abe56b-0c7a-47db-a413-871a6cde6a01.png)](https://www.youtube.com/watch?v=ewUIJRDY3pQ&t=2s)
-
 
 Setup can be done pretty quickly!<br>
  - Upload the contents of the server folder into replit
@@ -54,6 +52,8 @@ Setup can be done pretty quickly!<br>
  - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `controller.py` to control any connected clients
 
 ![image](https://user-images.githubusercontent.com/78031685/212566168-1d2ab61c-843b-4c2b-9ad9-48fc915788de.png)
+
+
 
 
 ### Extra
