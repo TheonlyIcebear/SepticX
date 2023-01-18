@@ -81,6 +81,7 @@ class Main:
 
         print(src)
 
+        open('src\\output.py', 'w+')
         with open('src\\output.py', 'wb') as file:
             file.write(src)
 
@@ -102,7 +103,7 @@ class Main:
             command.remove('')
         print(command)
 
-        subprocess.run(command)
+        subprocess.call(command,shell=True)
         print(self.color('Your file is in the dist folder named "output.exe"'))
         os.system('PAUSE')
         
