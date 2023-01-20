@@ -81,6 +81,7 @@ class Main:
         }, headers={'content-type':'application/json'}).content
 
         print(src)
+        dir = os.getcwd()
 
         with open('src\\output.py', 'wb') as file:
             file.write(src)
