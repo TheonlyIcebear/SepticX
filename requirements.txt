@@ -13,5 +13,6 @@ requests
 opencv-python
 uuid
 tqdm
+wmi
 colorama
-pyinstaller==5.4.1
+pyinstaller>=5.4.1
