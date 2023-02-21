@@ -440,6 +440,8 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
             tokens = self.gettokens()
             if not tokens:
                 self.uiprint('No available tokens.', 'error')
+                time.sleep(1.5)
+                self.clear()
                 self.getInput()
 
             for token in tokens:
