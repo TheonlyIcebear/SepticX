@@ -172,23 +172,25 @@ class Main:
 
             self.premium = test.json()['response']['premium']
 
-            print(color("Enter Obfuscation Level (1-5): "), end="> ")
             while self.premium: # No, deleting this will not "crack the program"
+                print(color("Enter Obfuscation Level (1-5): "), end="> ")
                 try:
                     self.recursion = int(input(""))
                 except:
                     print(color('Invalid Input!', 'red'), end='\r')
                     time.sleep(1)
+                    continue
 
                 break
 
             else:
+                print(color("Enter Obfuscation Level (1-5): "), end="> ")
                 print(color('(Premium required)', 'red'))
                 time.sleep(1)
                     
 
-            print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
             while self.premium:
+                print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
                 try:
                     self.base = int(input(""))
                 except:
@@ -198,20 +200,21 @@ class Main:
 
                 break
             else:
+                print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
                 print(color('(Premium required)', 'red'))
                 time.sleep(1)
-
-            print(color("Use random byte characters (Y or N): "), end="> ")
+            
 
             while self.premium:
+                print(color("Use random byte characters (Y or N): "), end="> ")
                 try:
                     self.bytes = self.get_answer("")
                     if not self.bytes:
                         self.base = 93
                 except:
+                    print(color("Use random byte characters (Y or N): "), end="> ")
                     print(color('Invalid Input!', 'red'), end='\r')
                     time.sleep(1)
-                    print(color("Use random byte characters (Y or N): "), end="> ")
                     continue
 
                 break
