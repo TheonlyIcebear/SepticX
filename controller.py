@@ -465,7 +465,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
 
 
 
-        elif choice == 20:
+        elif choice == 21:
             self.showComputers(False)
 
         self.clear()
