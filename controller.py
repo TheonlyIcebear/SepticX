@@ -28,7 +28,6 @@ class Main:
 
       self.uiprint('Enter your server address')
       self.host = input('> ').replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0]
-      print(self.host)
 
       self.uiprint('Enter your server key')
       self.key = input('> ')
@@ -56,7 +55,7 @@ class Main:
             cprint(message, "green")
 
     def connect(self):
-        self.ws = create_connection(f"wss://{self.host}/api/ws/computers")
+        self.ws = create_connection(f"wss://{self.host}/api/ws/computers", sslopt={"cert_reqs": ssl.CERT_NONE})
         ws = self.ws
         ws.send(self.key)
 
@@ -176,7 +175,7 @@ class Main:
             count = 0
             l = 0
 
-            ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
+            ws = create_connection(f"wss://{self.host}/api/ws/playAudio", sslopt={"cert_reqs": ssl.CERT_NONE})
             ws.send(self.key)
             ws.send(target)
             
@@ -214,7 +213,7 @@ class Main:
                     
                 except Exception as e:
                     print(e)
-                    ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
+                    ws = create_connection(f"wss://{self.host}/api/ws/playAudio", sslopt={"cert_reqs": ssl.CERT_NONE})
                     ws.send(self.key)
                     ws.send(target)
 
@@ -267,7 +266,7 @@ class Main:
                     threading.Thread(target=self.edit, args=(panel, data)).start()
                 except Exception as e:
                     print(e)
-                    ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
+                    ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}", sslopt={"cert_reqs": ssl.CERT_NONE})
                     ws.send(self.key)
                     ws.send(target)
 
