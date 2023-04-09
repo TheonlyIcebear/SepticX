@@ -145,6 +145,7 @@ class Main:
         massdm_script = ''
         cost = 0
         reboots_allowed = 0
+        hours = 0
         webhook = ''
         massdm = False
         auto_nuke = False
