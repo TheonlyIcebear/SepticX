@@ -126,6 +126,9 @@ class Main:
             while True:
                 try:
                     command = input('>> ')
+                except KeyboardInterrupt:
+                    break
+
                 except Exception as e:
                     self.ws = self.establishConnection()
                     ws = self.ws
@@ -258,8 +261,7 @@ class Main:
             l = time.time()
             while not self.Stop:
                 j = json.loads(ws.recv())
-                print(time.time()-j["t"])
-                if (abs(j["t"]-time.time()) < 1) and (j["t"] > l):
+                if (abs(j["t"]-time.time()) < 2.5) and (j["t"] > l):
                     continue
                 try:
                     data = base64.b64decode(j["data"])
