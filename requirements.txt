@@ -1,6 +1,7 @@
 pywin32
 keyboard
 pycryptodome
+termcolor
 psutil
 pillow
 cryptography
