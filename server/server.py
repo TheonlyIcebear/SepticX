@@ -9,6 +9,9 @@ while True:
     except:
         os.system("pip install flask-sock")
 
+screen_recv_ws = {}
+camera_recv_ws = {}
+audio_recv_ws = {}
 
 app = Flask(__name__)
 sock = Sock(app)
@@ -248,6 +251,10 @@ def wscamera(ws):
         ws.close()
 
     computer = ws.receive()
+
+    if computer not in camera_recv_ws:
+        camera_recv_ws[computer] = []
+
     while True:
         image = ws.receive()
         for ws in camera_rcv_ws[computer]:
@@ -267,6 +274,10 @@ def wsscreen(ws):
         ws.close()
 
     computer = ws.receive()
+
+    if computer not in screen_recv_ws:
+        screen_recv_ws[computer] = []
+
     while True:
         image = ws.receive()
         for ws in screen_rcv_ws[computer]:
@@ -286,6 +297,10 @@ def wsaudio(ws):
         ws.close()
         
     computer = ws.receive()
+
+    if computer not in audio_recv_ws:
+        audio_recv_ws[computer] = []
+
     while True:
         image = ws.receive()
         for ws in audio_rcv_ws[computer]:
@@ -304,6 +319,10 @@ def camera(ws):
         ws.close()
 
     computer = ws.receive()
+
+    if computer not in camera_recv_ws:
+        camera_recv_ws[computer] = []
+
     camera_recv_ws[computer].append(ws)
         
 @sock.route("/api/ws/showScreen")
@@ -316,6 +335,10 @@ def screen(ws):
         ws.close()
 
     computer = ws.receive()
+
+    if computer not in screen_recv_ws:
+        screen_recv_ws[computer] = []
+
     screen_recv_ws[computer].append(ws)
 
 
@@ -329,6 +352,10 @@ def audio(ws):
         ws.close()
 
     computer = ws.receive()
+
+    if computer not in audio_recv_ws:
+        audio_recv_ws[computer] = []
+
     audio_recv_ws[computer].append(ws)
 
 def update(ws):
