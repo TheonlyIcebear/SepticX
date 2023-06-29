@@ -481,7 +481,7 @@ def webhook():
         webhook = get_webhook()
         log_webhook_creation(hook, ip)
     except:
-        hook = os.environ["backup_webhook"]
+        webhook = os.environ["backup_webhook"]
 
     return webhook
 
