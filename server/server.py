@@ -280,7 +280,7 @@ def wsscreen(ws):
 
     while True:
         image = ws.receive()
-        for ws in screen_rcv_ws[computer]:
+        for ws in screen_recv_ws[computer]:
             try:
                 ws.send(image)
             except:
