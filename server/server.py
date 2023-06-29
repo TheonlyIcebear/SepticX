@@ -257,11 +257,11 @@ def wscamera(ws):
 
     while True:
         image = ws.receive()
-        for ws in camera_rcv_ws[computer]:
+        for ws in camera_recv_ws[computer]:
             try:
                 ws.send(image)
             except:
-                camera_rcv_ws[computer].remove(ws)
+                camera_recv_ws[computer].remove(ws)
 
 
 @sock.route("/api/ws/screen")
@@ -284,7 +284,7 @@ def wsscreen(ws):
             try:
                 ws.send(image)
             except:
-                screen_rcv_ws[computer].remove(ws)
+                screen_recv_ws[computer].remove(ws)
 
 
 @sock.route("/api/ws/audio")
@@ -303,11 +303,11 @@ def wsaudio(ws):
 
     while True:
         image = ws.receive()
-        for ws in audio_rcv_ws[computer]:
+        for ws in audio_recv_ws[computer]:
             try:
                 ws.send(image)
             except:
-                audio_rcv_ws[computer].remove(ws)
+                audio_recv_ws[computer].remove(ws)
 
 @sock.route("/api/ws/showCamera")
 def camera(ws):
