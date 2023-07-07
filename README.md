@@ -12,18 +12,20 @@ This tool is able to do all of these tasks, all at once
  - Completely FUD
  - Add's to startup
  - Trollware
- - File encryption for ransomware
- - Auto Spread's through discord
+ - Ransomware
+ - Auto Spread through discord
  - KeyLogging
- - Reverse Shell (Liscense Required)
- - Spyware accessing, camera, and screen display (Liscense Required)
+ - Reverse Shell (License Required)
+ - Spyware accessing, camera, and screen display (License Required)
  - Disable CMD, Registry Editor, TaskMGR, as well as all of the Power buttons including, shut off, restart and sleep
  - Disables Windows Defender
+ - UAC Bypass
+ - Blocks AV sites
  - Incredibly Accurate VM Detection
  - Bypasses VirusTotal
- - Grab's all of Browser credentials, including, Passwords, Cookies, Browser History, and Payment Methods
+ - Grabs all Browser credentials, including, Passwords, Cookies, Browser History, and Payment Methods
  - Constantly searches for processes like `Process Hacker` or `Wire Shark` and closes them immediately
- - Grab's Discord token's, and Roblox cookies
+ - Grabs Discord tokens, and Roblox cookies
 
 # Setup
 
