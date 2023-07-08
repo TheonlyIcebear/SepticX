@@ -16,6 +16,7 @@ opencv-python
 uuid
 tqdm
 wmi
+customtkinter
 colorama
 PyInstaller>=5.4.1
 fade
