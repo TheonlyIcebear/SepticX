@@ -6,7 +6,6 @@ psutil
 pillow
 cryptography
 pycryptodomex
-playsound
 websocket-client
 sounddevice
 scipy
