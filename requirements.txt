@@ -17,5 +17,5 @@ tqdm
 wmi
 customtkinter
 colorama
-PyInstaller>=5.4.1
+PyInstaller>=5.8.0
 fade
