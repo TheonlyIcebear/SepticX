@@ -40,7 +40,7 @@ Setup can be done pretty quickly!<br>
  - delete `main.py` and remame `server.py` to `main.py`
 
  - Copy and paste example.json into the replit secret manager to set the `ENV` variables, Remember to replace the env variables with your own information
-    - For the `key` variable go to <a src="https://emn178.github.io/online-tools/sha256.html">this link</a> and input whatever password you want, copy the output then set the `ENV` variable to the output from the site 
+    - For the `key` variable go to [this link](https://emn178.github.io/online-tools/sha256.html) and input whatever password you want, copy the output then set the `ENV` variable to the output from the site 
     
         - This is the same key you will use when building the rat
 
