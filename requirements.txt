@@ -1,9 +1,9 @@
 pywin32
+pyaudio
 keyboard
 pycryptodome
 termcolor
 psutil
-pillow
 cryptography
 pycryptodomex
 websocket-client
@@ -17,5 +17,6 @@ tqdm
 wmi
 customtkinter
 colorama
-PyInstaller
 fade
+pillow
+PyInstaller>=5.4.1
