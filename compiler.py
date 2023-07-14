@@ -38,7 +38,7 @@ class ScrollableFrame(customtkinter.CTkScrollableFrame):
 
     def file_prompt(self):
         filetypes = (
-            ('EXE files', '*.exe'),
+            ('All files', '*'),
         )
 
         filename = fd.askopenfilename(
