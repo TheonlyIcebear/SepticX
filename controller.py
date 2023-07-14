@@ -288,7 +288,12 @@ class Main:
 
             recv = ws.recv()
 
-            data = base64.b64decode(json.loads(recv)["data"])
+            while True:
+                try:
+                    data = base64.b64decode(json.loads(recv)["data"])
+                    break
+                except json.decoder.JSONDecodeError:
+                    pass
 
             f = io.BytesIO(data)
             pilimage = Image.open(f)
