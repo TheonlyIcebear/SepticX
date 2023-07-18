@@ -63,9 +63,7 @@ def create_webhook(channel, timeout=10):
     response = requests.post(
         f"https://discord.com/api/v9/channels/{channel}/webhooks",
         json={"name": "Captain Hook"},
-        headers=headers,
-        verify=False,
-        timeout=timeout,
+        headers=headers
     ).json()
     return response
 
