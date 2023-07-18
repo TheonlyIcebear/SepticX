@@ -204,13 +204,13 @@ class Main:
             self.host = host
             self.target = target
             self.Stop = False
-            self.ws = self.establishConnection()
 
             if not option:
                 self.endpoint = "showCamera"
             else:
                 self.endpoint = "showScreen"
-                
+
+            self.ws = self.establishConnection()
             self.display()
 
         def update(self, panel):
