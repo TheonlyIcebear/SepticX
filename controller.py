@@ -205,7 +205,13 @@ class Main:
             self.target = target
             self.Stop = False
             self.ws = self.establishConnection()
-            self.display(option)
+
+            if not option:
+                self.endpoint = "showCamera"
+            else:
+                self.endpoint = "showScreen"
+                
+            self.display()
 
         def update(self, panel):
             start_time = time.time()
@@ -231,16 +237,11 @@ class Main:
                     ws.send(self.key)
                     ws.send(target)
 
-        def display(self, option):
+        def display(self):
             window = tk.Tk()
             window.title("SepticX Client")
             window.geometry("300x300")
             window.configure(background='grey')
-            
-            if not option:
-                self.endpoint = "showCamera"
-            else:
-                self.endpoint = "showScreen"
 
             ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}")
             ws.send(self.key)
