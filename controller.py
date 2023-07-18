@@ -221,6 +221,7 @@ class Main:
 
                 try:
                     recv_data = ws.recv()
+                    print(recv_data)
                     data = base64.b64decode(recv_data)
 
                     f = io.BytesIO(data)
@@ -233,6 +234,7 @@ class Main:
 
                 except Exception as e:
                     print(e)
+                    ws.close()
                     ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}", sslopt={"cert_reqs": ssl.CERT_NONE})
                     ws.send(self.key)
                     ws.send(target)
