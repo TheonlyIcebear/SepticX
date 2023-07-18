@@ -4,6 +4,7 @@ keyboard
 pycryptodome
 termcolor
 psutil
+mss
 cryptography
 pycryptodomex
 websocket-client
