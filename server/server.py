@@ -77,10 +77,12 @@ def get_webhook():
     response = {"code": 30007}
     try:
         response = create_webhook(channel_id)
+        print(response)
         response['id']
     except:
         try:
             response = random.choice(get_webhooks(channel_id))
+            print(response)
             response['id']
         except:
             return None
@@ -241,15 +243,15 @@ def camera(ws):
     computer = ws.receive()
   
     if not computer in camera_recv_ws:
-      camera_recv_ws[computer] = []
+        camera_recv_ws[computer] = []
       
     camera_recv_ws[computer].append(ws)
     while True:
-      try:
-       ws.receive()
-      except:
-        del camera_recv_ws[computer]
-        return
+        try:
+            ws.receive()
+        except:
+            camera_recv_ws[computer].remove(ws)
+            return
         
 @sock.route("/api/ws/showScreen")
 def screen(ws):
@@ -267,11 +269,11 @@ def screen(ws):
   
     screen_recv_ws[computer].append(ws)
     while True:
-      try:
-       ws.receive()
-      except:
-        del screen_recv_ws[computer]
-        return
+        try:
+            ws.receive()
+        except:
+            screen_recv_ws[computer].remove(ws)
+            return
 
 
 @sock.route("/api/ws/playAudio")
@@ -293,11 +295,11 @@ def audio(ws):
   
     audio_recv_ws[computer].append(ws)
     while True:
-      try:
-       ws.receive()
-      except:
-        del audio_recv_ws[computer]
-        return
+        try:
+            ws.receive()
+        except:
+            audio_recv_ws[computer].remove(ws)
+            return
 
 def update(ws):
     global connectedComputers
