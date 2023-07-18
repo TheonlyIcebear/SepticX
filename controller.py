@@ -221,7 +221,6 @@ class Main:
 
                 try:
                     recv_data = ws.recv()
-                    print(recv_data)
                     data = base64.b64decode(recv_data)
 
                     f = io.BytesIO(data)
@@ -229,15 +228,13 @@ class Main:
                     img = ImageTk.PhotoImage(pilimage)
                     panel.configure(image=img)
                     panel.image = img
-                except KeyboardInterrupt:
+                except (KeyboardInterrupt, AttributeError):
                     break
 
                 except Exception as e:
                     print(e)
                     ws.close()
-                    ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}", sslopt={"cert_reqs": ssl.CERT_NONE})
-                    ws.send(self.key)
-                    ws.send(target)
+                    ws = self.establishConnection()
 
         def display(self):
             window = tk.Tk()
@@ -245,9 +242,7 @@ class Main:
             window.geometry("300x300")
             window.configure(background='grey')
 
-            ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}")
-            ws.send(self.key)
-            ws.send(self.target)
+            ws = self.establishConnection()
 
             ws.recv()
             data = base64.b64decode(ws.recv())
@@ -258,7 +253,7 @@ class Main:
             panel = tk.Label(window, image=img)
             panel.pack(side="bottom", fill="both", expand="yes")
 
-            threading.Thread(target=self.update, args=(panel)).start()
+            threading.Thread(target=self.update, args=(panel,)).start()
             window.mainloop()
 
         def establishConnection(self):
