@@ -144,8 +144,7 @@ class Main:
                 except websocket._exceptions.WebSocketConnectionClosedException:
                     ws = self.establishConnection()
 
-
-                if not timer.is_alive:
+                if not timer.is_alive():
                     self.ws = self.establishConnection()
                     ws = self.ws
                     print("[SepticX Handler]: Timeour Error Occured")
