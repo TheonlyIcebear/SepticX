@@ -185,6 +185,9 @@ class Main:
             try:
                 while not self.Stop:
                     stream.write(base64.b64decode(ws.recv()))
+            except KeyboardInterrupt:
+                return
+                
             except:
                 ws = self.establishConnection()
 
