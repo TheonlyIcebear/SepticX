@@ -13,6 +13,7 @@ scipy
 discord
 requests
 opencv-python
+bit
 uuid
 tqdm
 wmi
@@ -20,4 +21,5 @@ customtkinter
 colorama
 fade
 pillow
-PyInstaller>=5.4.1
+coincurve
+PyInstaller==5.4.1
