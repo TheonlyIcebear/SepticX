@@ -1,8 +1,4 @@
 {
-    "key": "",
-    "backup_webhook": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "webhook_generation_logs": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "token": "",
-    "channel_id": "",
-    "channel_id2": ""
-  }
+  "key": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+  "webhook": "https://discord.com/api/webhooks/xxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
