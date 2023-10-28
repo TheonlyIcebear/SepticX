@@ -340,7 +340,6 @@ def webhook():
     if request.method == "GET":
 
         response = scraper.get(webhook).text
-        print(response)
         return response
 
     elif request.method == "POST":
@@ -359,7 +358,7 @@ def webhook():
 
         if files:
           try:
-              files = {'file': (key, file.read()) for key, file in files.items()}
+              files = {file.filename(): (key, file.read()) for key, file in files.items()}
           except Exception as e:
               files = {}
               print(e, 5)
