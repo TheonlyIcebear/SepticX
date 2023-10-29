@@ -129,12 +129,8 @@ class Main:
                 except Exception as e:
                     ws = self.establishConnection()
 
-                timer = threading.Timer(15., ws.close)
-                timer.start()
-
                 try:
                     print(ws.recv())
-                    timer.cancel()
                 except KeyboardInterrupt:
                     break
 
@@ -143,11 +139,6 @@ class Main:
 
                 except websocket._exceptions.WebSocketConnectionClosedException:
                     ws = self.establishConnection()
-
-                if not timer.is_alive():
-                    self.ws = self.establishConnection()
-                    ws = self.ws
-                    print("[SepticX Handler]: Timeour Error Occured")
                     
 
         def establishConnection(self):
@@ -213,13 +204,16 @@ class Main:
                 self.endpoint = "showScreen"
 
             self.ws = self.establishConnection()
-            self.display()
+            threading.Thread(target=self.display).start()
+            time.sleep(0.1)
+            self.update()
 
-        def update(self, panel):
-            start_time = time.time()
+        def update(self):
             ws = self.ws
 
             while not self.Stop:
+
+                panel = self.panel
 
                 try:
                     recv_data = ws.recv()
@@ -234,8 +228,8 @@ class Main:
                     break
 
                 except Exception as e:
-                    print(e)
                     ws.close()
+                    self.display()
                     ws = self.establishConnection()
 
         def display(self):
@@ -244,18 +238,9 @@ class Main:
             window.geometry("300x300")
             window.configure(background='grey')
 
-            ws = self.establishConnection()
+            self.panel = tk.Label(window)
+            self.panel.pack(side="bottom", fill="both", expand="yes")
 
-            ws.recv()
-            data = base64.b64decode(ws.recv())
-
-            f = io.BytesIO(data)
-            pilimage = Image.open(f)
-            img = ImageTk.PhotoImage(pilimage)
-            panel = tk.Label(window, image=img)
-            panel.pack(side="bottom", fill="both", expand="yes")
-
-            threading.Thread(target=self.update, args=(panel,)).start()
             window.mainloop()
 
         def establishConnection(self):
