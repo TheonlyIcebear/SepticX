@@ -32,7 +32,7 @@ This tool is able to do all of these tasks, all at once
  - Constantly searches for processes like `Process Hacker` or `Wire Shark` and closes them immediately
  - Grabs Discord tokens, and Roblox cookies
 
-https://www.virustotal.com/gui/file/4e57d1fa0b913feeb707034bea4c48a8bfe131f05401403c29770fcef39e4ec4?nocache=1 <br>
+https://www.virustotal.com/gui/file/f0000196e13bf8c69cb7991eeb9e231184de3daa13a6cc463d940d103fc4e0fb/detection <br>
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/e9782a60-d1da-43b4-89dc-c9b76cf2ec43)
 
 
