@@ -86,4 +86,4 @@ If you you'd like to report any bugs or ask for support go to my [Discord Server
 
 # Disclaimer
 
-Do not use this tool to remotely access anyone's computer with their consent, for that is illegal by federal law.
+Do not use this tool to remotely access anyone's computer without their consent, for that is illegal by federal law.
