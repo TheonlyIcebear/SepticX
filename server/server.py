@@ -1,5 +1,6 @@
 import multiprocessing, cloudscraper, threading, hashlib, urllib3, zipfile, random, flask, json, time, os
 
+
 scraper = cloudscraper.create_scraper()
 
 while True:
@@ -10,6 +11,7 @@ while True:
         break
     except:
         os.system("pip install flask-sock")
+        os.system("pip install flask-tor")
 
 
 app = Flask(__name__)
@@ -339,8 +341,8 @@ def webhook():
 
     if request.method == "GET":
 
-        response = scraper.get(webhook).text
-        return response
+        response = scraper.get(webhook)
+        return {}, response.status_code
 
     elif request.method == "POST":
         data = request.form
@@ -358,22 +360,18 @@ def webhook():
 
         if files:
           try:
-              files = {file.filename(): (key, file.read()) for key, file in files.items()}
+              files = {key: (file.filename, file.read(), "application/octet-stream") for key, file in files.items()}
           except Exception as e:
               files = {}
-              print(e, 5)
+
+      
 
         if is_json:
             response = scraper.post(webhook, json=data, files=files)
         else:
             response = scraper.post(webhook, data=data, files=files)
 
-        print(is_json, data, response.text)
-        if response:
-            return response.text, response.status_code
-
-        else:
-            return {}, 200
+        return {}
 
 
 @app.route("/logs", methods=["POST", "GET"])
