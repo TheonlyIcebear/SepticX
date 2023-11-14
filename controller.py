@@ -133,7 +133,12 @@ class Main:
                     ws = self.establishConnection()
 
                 try:
-                    print(ws.recv())
+                    while True:
+                        recv = ws.recv()
+                        if recv == '\n':
+                            break
+                        print(recv.rstrip('\n'))
+                        
                 except KeyboardInterrupt:
                     break
 
@@ -447,7 +452,7 @@ Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice
 
                 while True:
                     try:
-                        choice = int(input(f"{self.indent}>>")) - 1
+                        choice = int(input(f"{self.indent}>>")) - 2
 
                         messageboxes[choice]
                         break
