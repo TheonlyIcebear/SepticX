@@ -188,7 +188,7 @@ class App(customtkinter.CTk):
     
 
     def verify_key(self, key, label):
-        status_code = requests.get('https://septicx.repl.co/api/verify', data={'key':key, 'hwid': self.hwid}).status_code
+        status_code = requests.get('https://ce13ac58-2803-4d07-801f-652e76b3e25c-00-1x3cz0h0gw60p.teams.replit.dev/api/verify', data={'key':key, 'hwid': self.hwid}).status_code
 
         if status_code == 200:
             label.configure(text='Success!')
@@ -376,7 +376,7 @@ class App(customtkinter.CTk):
             "ADMIN": admin
         }
 
-        src = requests.get('https://septicx.repl.co/api/obfuscate', json={
+        src = requests.get('https://ce13ac58-2803-4d07-801f-652e76b3e25c-00-1x3cz0h0gw60p.teams.replit.dev/api/obfuscate', json={
             "options": {
                 "base": self.base,
                 "recursion": self.recursion,
