@@ -197,7 +197,7 @@ class App(customtkinter.CTk):
             self.key = key
 
             for child in self.winfo_children()[1:]:
-                child.destroy() # Abortion clinic
+                child.destroy()
 
             self.menu()
 
