@@ -3,6 +3,7 @@ pyaudio
 keyboard
 pycryptodome
 termcolor
+pywinauto
 psutil
 mss
 cryptography

