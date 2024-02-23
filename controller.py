@@ -199,7 +199,7 @@ class Controller(customtkinter.CTkFrame):
                     )
 
                 else:
-                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: self.send_command(command, target), fg_color="#018f8f",
+                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: (self.send_command(command, target), tkinter.messagebox.showinfo("SepticX Client", "Successfully executed command")), fg_color="#018f8f",
                         text_color="white")
 
                 btn.grid(row=count + 1, column=0, padx=20, pady=5, sticky="ew")
