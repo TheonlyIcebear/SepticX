@@ -77,7 +77,7 @@ class Controller(customtkinter.CTkFrame):
         for i in range(4): # Set 4 columns
             self.columnconfigure(i, weight= 1)
 
-        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=lambda: self.destroy())
+        btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=lambda: self.destroy())
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
         frames = {
@@ -130,15 +130,15 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda: Shell(master, target), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
-                elif button_name == "Run Py script":
+                elif button_name == "Run PY script":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda command=command: self.send_command(command, target, True), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -146,7 +146,7 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda: self.get_webhook_input("Enter your new Webhook", target), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -154,7 +154,7 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda: self.get_message_box(target), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -162,7 +162,7 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=self.download_tokens, 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -170,7 +170,7 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=self.download_keylogs, 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -178,7 +178,7 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda command=command: (self.send_command(command, target), Video(master, target, 0)), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -186,7 +186,7 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda command=command: (self.send_command(command, target), Video(master, target, 1)), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
@@ -194,12 +194,12 @@ class Controller(customtkinter.CTkFrame):
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda command=command: (self.send_command(command, target), Audio(master, target)), 
-                        fg_color="#018f8f",
+                        fg_color="#1b6e63",
                         text_color="white"
                     )
 
                 else:
-                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: (self.send_command(command, target), tkinter.messagebox.showinfo("SepticX Client", "Successfully executed command")), fg_color="#018f8f",
+                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: (self.send_command(command, target), tkinter.messagebox.showinfo("SepticX Client", "Successfully executed command")), fg_color="#1b6e63",
                         text_color="white")
 
                 btn.grid(row=count + 1, column=0, padx=20, pady=5, sticky="ew")
@@ -225,7 +225,7 @@ class Controller(customtkinter.CTkFrame):
         for i in range(3): # Set 1 columns
             cover_frame.columnconfigure(i, weight= 1)
 
-        btn = customtkinter.CTkButton(cover_frame, text="X", fg_color="Red", command=cover_frame.destroy)
+        btn = customtkinter.CTkButton(cover_frame, text="X", fg_color="#435250", command=cover_frame.destroy)
         btn.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
 
         self.messagebox = "Error"
@@ -289,7 +289,7 @@ class Controller(customtkinter.CTkFrame):
         for i in range(11): # Set 11 columns
             cover_frame.columnconfigure(i, weight= 1)
 
-        btn = customtkinter.CTkButton(cover_frame, text="X", fg_color="Red", command=cover_frame.destroy)
+        btn = customtkinter.CTkButton(cover_frame, text="X", fg_color="#435250", command=cover_frame.destroy)
         btn.grid(row=0, column=0, columnspan=11, padx=5, pady=5, sticky="nsew")
 
         entry = customtkinter.CTkEntry(cover_frame, placeholder_text=query)
@@ -337,7 +337,7 @@ class Video(customtkinter.CTkFrame):
 
         self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
 
-        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=self.kill_proc)
+        btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
         for i in range(11): # Set 11 rows
@@ -410,7 +410,7 @@ class Audio(customtkinter.CTkFrame):
 
         self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
 
-        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=self.kill_proc)
+        btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         for i in range(11): # Set 11 rows
@@ -485,7 +485,7 @@ class Shell(customtkinter.CTkFrame):
         for i in range(1): # Set 1 columns
             self.columnconfigure(i, weight= 1)
 
-        btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=self.kill_proc)
+        btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
         terminal_frame = customtkinter.CTkScrollableFrame(self)
