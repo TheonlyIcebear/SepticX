@@ -4,6 +4,8 @@ An advanced python Rat Client capable of many malicious tasks
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/f450d92d-a3d4-4117-a3b6-81c40dd09825)
 
+![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/c3e36123-bd73-4500-90cf-2cabb522fccf)
+
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/191cc65e-0fa4-4946-a62f-6782ef6fa1c1)
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/37aebb7b-fb65-4ffe-ac57-45a2515fd473)
