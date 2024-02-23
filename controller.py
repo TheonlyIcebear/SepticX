@@ -373,8 +373,6 @@ class Video(customtkinter.CTkFrame):
                 ws = self.connect()
                 continue
 
-            print(data)
-
             self.image = Image.open(io.BytesIO(data))
 
     def connect(self):
