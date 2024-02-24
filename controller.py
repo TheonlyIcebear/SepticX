@@ -244,7 +244,7 @@ class Controller(customtkinter.CTkFrame):
             image = customtkinter.CTkImage(dark_image=pil_image, light_image=pil_image)
 
             btn = customtkinter.CTkButton(cover_frame, text=messagebox, image=image, command=lambda count=count: self.set_message_box(count))
-            btn.grid(row=3, column=count, padx=20, stick="ew")
+            btn.grid(row=3, column=count, padx=20, stick="nsew")
 
         title = customtkinter.CTkEntry(cover_frame, placeholder_text="Enter MessageBox Title")
         title.grid(row=5, column=1, pady=20, stick="nsew")
@@ -488,8 +488,10 @@ class Shell(customtkinter.CTkFrame):
         btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
-        terminal_frame = customtkinter.CTkScrollableFrame(self)
+        terminal_frame = customtkinter.CTkTextbox(self)
         terminal_frame.grid(row=1, column=0, rowspan=10, columnspan=4, sticky="nsew")
+
+        terminal_frame.configure(state="disabled")
 
         self.terminal_frame = terminal_frame
 
@@ -500,12 +502,6 @@ class Shell(customtkinter.CTkFrame):
 
         submit = customtkinter.CTkButton(self, text="Submit", command=lambda: threading.Thread(target=self.run_command).start())
         submit.grid(row=11, column=3, padx=5, pady=5, sticky="nsew")
-
-        for i in range(11): # Set 11 rows
-            terminal_frame.rowconfigure(i, weight= 1)
-        
-        for i in range(100): # Set 100 columns
-            terminal_frame.columnconfigure(i, weight= 1)
 
     def kill_proc(self):
         self.stop = True
@@ -528,11 +524,8 @@ class Shell(customtkinter.CTkFrame):
             except websocket.WebSocketException:
                 ws = self.connect()
 
-        terminal = customtkinter.CTkLabel(self.terminal_frame, text=command, justify=LEFT, anchor="w")
-        terminal.grid(row=self.row, column=0, padx=5, pady=0)
+        self.add_text(command)
 
-        self.row += 1
-        
         while True:
             try:
                 recv = ws.recv()
@@ -544,10 +537,16 @@ class Shell(customtkinter.CTkFrame):
 
             print(recv.rstrip('\n'))
 
-            terminal = customtkinter.CTkLabel(self.terminal_frame, text=recv.rstrip('\n'), justify=LEFT, anchor="w")
-            terminal.grid(row=self.row, column=0, padx=5, pady=0)
+            self.add_text(recv)
 
-            self.row += 1
+    def add_text(self, text):
+        self.row += 1
+
+        print(self.row)
+
+        self.terminal_frame.configure(state="normal")
+        self.terminal_frame.insert(f"{self.row}.0", text + "\n")
+        self.terminal_frame.configure(state="disabled")
 
     def connect(self):
         while True:
