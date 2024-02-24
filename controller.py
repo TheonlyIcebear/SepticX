@@ -388,7 +388,6 @@ class Video(customtkinter.CTkFrame):
     def kill_proc(self):
         command = self.endpoint.replace('show', 'stop').replace('Screen', 'Desktop')
 
-        print(command, self.target)
         self.ws.send(json.dumps({
             "code": command,
             "target": self.target
@@ -542,8 +541,6 @@ class Shell(customtkinter.CTkFrame):
     def add_text(self, text):
         self.row += 1
 
-        print(self.row)
-
         self.terminal_frame.configure(state="normal")
         self.terminal_frame.insert(f"{self.row}.0", text + "\n")
         self.terminal_frame.configure(state="disabled")
@@ -624,7 +621,6 @@ class App(customtkinter.CTk):
             ws = create_connection(f"wss://{server_address}/api/ws/computers", sslopt={"cert_reqs": ssl.CERT_NONE})
         except (websocket.WebSocketException, ValueError) as e:
             label.configure(text='Invalid Server Address')
-            print(e)
             return
 
         ws.send(server_key)
