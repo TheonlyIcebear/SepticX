@@ -1,0 +1,5 @@
+cloudscraper
+requests
+flask-sock
+zipfile
+urllib3

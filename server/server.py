@@ -15,8 +15,8 @@ clients = []
 shell_computers = {}
 shell_clients = {}
 
-files_commands = {}
-files_response = {}
+files_computers = {}
+files_clients = {}
 
 screen_recv_ws = {}
 camera_recv_ws = {}
@@ -156,6 +156,64 @@ def shell(ws):
               shell_clients[computer].send(response)
           except:
               del shell_clients[computer]  
+              continue
+
+@sock.route("/api/ws/FileManager")
+def readfiles(ws):
+    global files_computers, files_computers
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print("SHELL")
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    files_computers[computer] = ws
+  
+    while True:
+          try:
+              response = ws.recieve()
+          except:
+               del files_computers[computer]
+               break
+
+          if computer not in files_clients:
+             continue
+
+          try:
+              files_clients[computer].send(response)
+          except:
+              del files_clients[computer]  
+              continue
+
+@sock.route("/api/ws/files")
+def files(ws):
+    global files_computers, files_computers
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print("SHELL")
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    files_computers[computer] = ws
+  
+    while True:
+          try:
+              response = ws.recieve()
+          except:
+               del files_computers[computer]
+               break
+
+          if computer not in files_clients:
+             continue
+
+          try:
+              files_clients[computer].send(response)
+          except:
+              del files_clients[computer]  
               continue
           
 @sock.route("/api/ws/camera")
