@@ -494,10 +494,12 @@ class Shell(customtkinter.CTkFrame):
 
         self.terminal_frame = terminal_frame
 
-        entry = customtkinter.CTkEntry(self, placeholder_text="Enter command")
+        text_variable = StringVar(value="")
+
+        entry = customtkinter.CTkEntry(self, placeholder_text="Enter command", textvariable=text_variable)
         entry.grid(row=11, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
 
-        self.entry = entry
+        self.entry = text_variable
 
         submit = customtkinter.CTkButton(self, text="Submit", command=lambda: threading.Thread(target=self.run_command).start())
         submit.grid(row=11, column=3, padx=5, pady=5, sticky="nsew")
@@ -506,14 +508,7 @@ class Shell(customtkinter.CTkFrame):
         self.stop = True
         self.destroy()
 
-    def run_command(self):
-        command = self.entry.get()
-
-        print(command)
-
-        if not command:
-            return
-
+    def get_command_output(self, command):
         ws = self.ws
         
         while True:
@@ -522,8 +517,6 @@ class Shell(customtkinter.CTkFrame):
                 break
             except websocket.WebSocketException:
                 ws = self.connect()
-
-        self.add_text(command)
 
         while True:
             try:
@@ -534,9 +527,27 @@ class Shell(customtkinter.CTkFrame):
             if recv == '\n':
                 break
 
-            print(recv.rstrip('\n'))
+            yield recv.rstrip('\n')
 
-            self.add_text(recv)
+    def run_command(self):
+        command = self.entry.get()
+
+        self.entry.set("")
+
+        if not command:
+            return
+        
+        while True:
+            try:
+                current_directory = [line for line in self.get_command_output("echo %cd%")][0][:-1]
+                break
+            except IndexError:
+                pass
+
+        self.add_text(f"{current_directory}>{command}")
+
+        for line in self.get_command_output(command):
+            self.add_text(line)
 
     def add_text(self, text):
         self.row += 1
@@ -627,7 +638,7 @@ class App(customtkinter.CTk):
         time.sleep(1)
 
         try:
-            self.computers = json.loads(ws.recv().replace("'", '"'))["computers"]
+            self.computers = json.loads(ws.recv())
         except (websocket.WebSocketException, ValueError, json.JSONDecodeError) as e:
             label.configure(text='Invalid Server Key')
             return
@@ -649,18 +660,29 @@ class App(customtkinter.CTk):
         self.menu()
 
     def update_computers(self):
-        global ws
         ws = self.ws
 
         while True:
             try:
-                self.computers = json.loads(ws.recv().replace("'", '"'))["computers"]
-            except (json.JSONDecodeError, websocket.WebSocketException, TypeError, PermissionError, ConnectionError) as e:
+                self.computers = json.loads(ws.recv())
+            except json.JSONDecodeError:
+                pass
+
+            except (websocket.WebSocketException, TypeError, PermissionError, ConnectionError) as e:
+                try:
+                    ws.close()
+                except (websocket.WebSocketException, PermissionError, ConnectionError):
+                    pass
+
+                print(e)
+
                 try:
                     ws = create_connection(f"wss://{self.server_address}/api/ws/computers")
                     ws.send(self.server_key)
                 except (json.JSONDecodeError, websocket.WebSocketException, PermissionError, ConnectionError) as e:
-                    pass
+                    print(e)
+
+            print(self.computers)
 
             self.ws = ws
 
