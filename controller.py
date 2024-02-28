@@ -68,6 +68,7 @@ class Controller(customtkinter.CTkFrame):
         self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
         self.server_address = master.server_address
         self.server_key = master.server_key
+        self.ws = master.ws
 
         self.master = master
 
@@ -315,7 +316,7 @@ class Controller(customtkinter.CTkFrame):
 
             command = open(filename, 'r+').read()
 
-        ws.send(json.dumps({
+        self.ws.send(json.dumps({
             "code": command,
             "target": target
         }))
