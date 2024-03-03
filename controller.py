@@ -4,7 +4,6 @@ from PIL import Image, ImageTk
 from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
-from win10toast import ToastNotifier
 from cryptography.fernet import Fernet
 from websocket import create_connection
 import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, pyaudio, tkinter, shutil, base64, json, fade, time, glob, zlib, cv2, ssl, os, io
