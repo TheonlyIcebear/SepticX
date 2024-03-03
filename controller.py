@@ -9,8 +9,7 @@ from websocket import create_connection
 import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, pyaudio, tkinter, shutil, base64, json, fade, time, glob, zlib, cv2, ssl, os, io
 
 customtkinter.set_appearance_mode("dark")
-toaster = ToastNotifier()
-        
+
 
 class Profile(customtkinter.CTkFrame):
     def __init__(self, master, parent=None, config=None, row=0, rowspan=1, padx=20, pady=20, title=False):
