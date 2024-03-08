@@ -445,8 +445,15 @@ class App(customtkinter.CTk):
         print(command)
 
         subprocess.call(command, shell=True)
-        self.response_label.configure(text='EXE in dist folder')
-        print(self.color('Your file is in the dist folder named "output.exe"'))
+
+        if os.path.exists(f"{dir}\\dist\\output.exe"):
+
+            self.response_label.configure(text='EXE in dist folder')
+            print(self.color('Your file is in the dist folder named "output.exe"'))
+
+        else:
+            self.response_label.configure(text='Failed to compile')
+            print(self.color('Failed to compile'))
 
         for file in os.listdir('src\\temp'):
             os.remove(f'src\\temp\\{file}')
