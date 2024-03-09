@@ -709,7 +709,15 @@ class FileManager(customtkinter.CTkFrame):
                     if data == "FIN":
                         break
 
-                    file.write(zlib.decompress(base64.b64decode(data)))
+                    print(data)
+                    
+                    data = data.replace('data|', '')
+
+                    try:
+                        file.write(zlib.decompress(base64.b64decode(data)))
+                    except zlib.error as z:
+                        print(z)
+
                     self.ws.send("ACK")
                 except (websocket.WebSocketException, WindowsError):
                     break
@@ -735,7 +743,7 @@ class FileManager(customtkinter.CTkFrame):
                 self.connect()
 
             except json.JSONDecodeError:
-                break
+                continue
 
         row = 0
         for file in list(file_info):
