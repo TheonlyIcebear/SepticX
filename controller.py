@@ -678,7 +678,7 @@ class FileManager(customtkinter.CTkFrame):
     def connect(self):
         while True:
             try:
-                ws = create_connection(f"wss://{self.server_address}/api/ws/readFiles")
+                ws = create_connection(f"wss://{self.server_address}/api/ws/FileManager")
                 ws.send(self.server_key)
                 ws.send(self.target)
                 self.ws = ws
@@ -687,6 +687,10 @@ class FileManager(customtkinter.CTkFrame):
                 pass
 
     def download(self, file_path):
+        ws = create_connection(f"wss://{self.server_address}/api/ws/readFiles")
+        ws.send(self.server_key)
+        ws.send(self.target)
+        
         self.ws.send(f"send_file|{file_path}")
 
         filename = file_path.split('\\')[-1]
@@ -705,20 +709,18 @@ class FileManager(customtkinter.CTkFrame):
         with open(filename, 'ab') as file:
             while True:
                 try:
-                    data = self.ws.recv()
+                    data = ws.recv()
                     if data == "FIN":
                         break
 
                     print(data)
-                    
-                    data = data.replace('data|', '')
 
                     try:
                         file.write(zlib.decompress(base64.b64decode(data)))
                     except zlib.error as z:
                         print(z)
 
-                    self.ws.send("ACK")
+                    ws.send("ACK")
                 except (websocket.WebSocketException, WindowsError):
                     break
 
