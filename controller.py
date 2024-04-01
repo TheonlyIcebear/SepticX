@@ -140,6 +140,7 @@ class Controller(customtkinter.CTkFrame):
                 ('mbr', 'Overwrite MBR'),
                 ('restart', 'Restart Pc'),
                 ('shutdown', 'Shutdown Pc'),
+                (None, 'Run PY script'),
             ],
             "Credentials": [
                 ('sendCreds', 'Resend Credentials'),
@@ -156,10 +157,10 @@ class Controller(customtkinter.CTkFrame):
             ],
             "Misc": [
                 ('startRansomware', 'Start Ransomware'),
+                ('stopRansomware', 'Stop Ransomware'),
                 (None, 'Show Message Box'),
                 ('Troll', 'Start Trollware'),
-                ('stopTroll', 'Stop Trollware'),
-                (None, 'Run PY script'), 
+                ('stopTroll', 'Stop Trollware'), 
                 ('clean', 'Uninstall Client')
             ]
         }
