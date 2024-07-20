@@ -590,6 +590,9 @@ class Shell(customtkinter.CTkFrame):
         self.entry.set("")
         self.add_text(f"> {command}")
 
+        if not command:
+            return
+
         while True:
             try:
                 self.ws.send(command)
