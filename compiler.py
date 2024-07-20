@@ -436,6 +436,8 @@ class App(customtkinter.CTk):
         bit_path = "\\".join(bit.__file__.split("\\")[:-1])
 
         default_imports = [
+            '--hidden-import','cryptography.hazmat.primitives.asymmetric.ed25519'
+            '--hidden-import','pkg_resources.py2_warn',
             '--hidden-import','subprocess',
             '--hidden-import','win32file',
             '--hidden-import','pythoncom',
