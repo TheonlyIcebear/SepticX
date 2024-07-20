@@ -567,51 +567,35 @@ class Shell(customtkinter.CTkFrame):
         submit = customtkinter.CTkButton(self, text="Submit", command=lambda: threading.Thread(target=self.run_command).start())
         submit.grid(row=11, column=3, padx=5, pady=5, sticky="nsew")
 
+        threading.Thread(target=self.read_command_outputs).start()
+
     def kill_proc(self):
         self.stop = True
         self.destroy()
         self.ws.close()
 
-    def get_command_output(self, command):
-        ws = self.ws
-        
+    def read_command_outputs(self):
         while True:
             try:
-                ws.send(command)
-                break
+                recv = self.ws.recv()
             except (websocket.WebSocketException, WindowsError):
-                ws = self.connect()
+                self.ws = self.connect()
+                continue
 
-        while True:
-            try:
-                recv = ws.recv()
-            except (websocket.WebSocketException, WindowsError):
-                ws = self.connect()
-
-            if recv == '\n':
-                break
-
-            yield recv.rstrip('\n')
+            self.add_text(recv)
 
     def run_command(self):
         command = self.entry.get()
 
         self.entry.set("")
+        self.add_text(f"> {command}")
 
-        if not command:
-            return
-        
         while True:
             try:
-                current_directory = [line for line in self.get_command_output("echo %cd%")][0][:-1]
+                self.ws.send(command)
                 break
-            except IndexError:
-                pass
-
-        self.add_text(f"{current_directory}>{command}")
-
-        for line in self.get_command_output(command):
-            self.add_text(line)
+            except (websocket.WebSocketException, WindowsError):
+                self.ws = self.connect()
 
     def add_text(self, text):
         self.row += 1
