@@ -871,11 +871,11 @@ class App(customtkinter.CTk):
         for child in main_frame.winfo_children()[1:]:
             child.destroy()
 
-        for computer in self.computers:
+        for idx, computer in enumerate(self.computers):
 
             username, ip_address = computer.split('|')
             config = {"username": username, "ip_address": ip_address}
-            Profile(master=main_frame, parent=self, config=config, row=1, rowspan=1, pady=1)
+            Profile(master=main_frame, parent=self, config=config, row=idx + 1, rowspan=1, pady=1)
 
         self.after(0, self.update_profiles, main_frame, computers)
 
