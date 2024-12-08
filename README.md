@@ -68,9 +68,8 @@ Setup can be done pretty quickly!<br>
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/8a74f54f-3f74-4f78-8a4a-bbcb5648611f)
 
-Click the image below for full tutorial:
 
-[![Untitled(2)](https://user-images.githubusercontent.com/78031685/212621717-a016f6f3-2bee-4491-b73d-10bbd7595fed.jpg)](https://www.youtube.com/watch?v=ewUIJRDY3pQ&t=2s)
+[Full tutorial here](https://www.veed.io/view/051c67a5-13a0-46bd-869f-1709f72eed36?panel=share)
 
 
 ### Extra
