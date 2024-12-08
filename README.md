@@ -4,7 +4,7 @@ An advanced python Rat Client capable of many malicious tasks
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/f450d92d-a3d4-4117-a3b6-81c40dd09825)
 
-![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/c3e36123-bd73-4500-90cf-2cabb522fccf)
+![image](https://github.com/user-attachments/assets/62f919b1-b974-42d2-abe6-dfb6e56e1c4a)
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/191cc65e-0fa4-4946-a62f-6782ef6fa1c1)
 
@@ -20,12 +20,14 @@ This tool is able to do all of these tasks, all at once
  - Add's to startup
  - Trollware
  - Ransomware
+ - File Manager
  - Auto Spread through discord
  - KeyLogging
  - Reverse Shell (License Required)
- - Spyware accessing, camera, and screen display (License Required)
+ - Spyware accessing, camera, microphone, and screen display (License Required)
  - Disable CMD, Registry Editor, TaskMGR, as well as all of the Power buttons including, shut off, restart and sleep
  - Disables Windows Defender
+ - Undetected by Windows Defender
  - UAC Bypass
  - Blocks AV sites
  - Incredibly Accurate VM Detection
