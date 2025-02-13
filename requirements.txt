@@ -17,6 +17,7 @@ requests
 opencv-python
 bit
 uuid
+CTkToolTip
 tqdm
 wmi
 customtkinter
