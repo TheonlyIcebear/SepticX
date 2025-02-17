@@ -7,7 +7,7 @@ from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
 from websocket import create_connection
-import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, datetime, pyaudio, tkinter, shutil, base64, json, fade, math, time, glob, zlib, cv2, ssl, os, io
+import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, datetime, pyaudio, tkinter, shutil, base64, numpy as np, json, fade, math, time, glob, zlib, cv2, ssl, os, io
 
 customtkinter.set_appearance_mode("dark")
 
@@ -360,7 +360,7 @@ class Video(customtkinter.CTkToplevel):
             self.columnconfigure(i, weight= 1)  
 
         self.minsize(500, 300)
-        self.title(f"{target} Screen")
+        self.title(f"{target}'s {self.endpoint[4:]}")
         self.protocol("WM_DELETE_WINDOW", lambda: (self.kill_proc()))
         self.lift()
 
@@ -380,7 +380,7 @@ class Video(customtkinter.CTkToplevel):
             self.after(50, self.update_display)
             return
         
-        image = customtkinter.CTkImage(dark_image=self.image, light_image=self.image, size=(self.winfo_width()*0.975, self.winfo_height()*0.975))
+        image = customtkinter.CTkImage(dark_image=self.image, light_image=self.image, size=(self.winfo_width()*0.7, self.winfo_height()*0.7))
         self.screen.configure(image=image, text="")
         self.after(50, self.update_display)
 
@@ -442,8 +442,15 @@ class Audio(customtkinter.CTkToplevel):
             self.columnconfigure(i, weight= 1)
 
         screen = customtkinter.CTkLabel(self, text="Listening to audio...")
-        screen.grid(row=1, column=0, rowspan=10, sticky="nsew")
+        screen.grid(row=2, column=0, rowspan=9, sticky="nsew")
 
+        slider = customtkinter.CTkSlider(self, from_=0, to=500, number_of_steps=500, command=lambda value:tooltip.configure(message=f"{value} %"))
+        slider.grid(row=1, column=0)
+        slider.set(100)
+
+        tooltip = CTkToolTip(slider, message="100%")
+
+        self.slider = slider
         self.screen = screen
         threading.Thread(target=self.play_audio).start()
 
@@ -461,11 +468,19 @@ class Audio(customtkinter.CTkToplevel):
             input = True,
             output = True,
             frames_per_buffer = chunk)
-        
+
         while not self.stop:
+            GAIN = self.slider.get() / 100
             try:
-                stream.write(zlib.decompress(base64.b64decode(ws.recv())))
-            except:
+                audio_data = zlib.decompress(base64.b64decode(ws.recv()))
+            
+                audio_np = np.frombuffer(audio_data, dtype=np.int16)
+                audio_np = np.clip(audio_np * GAIN, -32768, 32767).astype(np.int16)
+
+                # Convert back to bytes and write to stream
+                stream.write(audio_np.tobytes())
+            except Exception as e:
+                print(e)
                 ws = self.connect()
 
     def connect(self):
@@ -739,6 +754,12 @@ class FileManager(customtkinter.CTkFrame):
 
             open(filename, 'w+').close()
             break
+
+        # Remove string and commas to interpret as integer
+
+        file_size = list(file_size[:-6])
+        del file_size[-4::-4]
+        file_size = int(''.join(file_size))
         
         chunk_size = 65536
         progress_bar = ProgressBar(transfer_type="Download")
@@ -773,7 +794,7 @@ class FileManager(customtkinter.CTkFrame):
         progress_bar.destroy()
 
     def upload(self):
-        chunk_size = 65536
+        chunk_size = 1024
         
         ws = create_connection(f"wss://{self.server_address}/api/ws/files")
         ws.send(self.server_key)
@@ -810,13 +831,13 @@ class FileManager(customtkinter.CTkFrame):
             for count in range(math.ceil(length / chunk_size)):
                 chunk = data[count * chunk_size: (count + 1) * chunk_size]
 
-                timer = threading.Timer(30, ws.close)
+                timer = threading.Timer(60, ws.close)
                 timer.start()
 
                 progress = min((count + 1) / math.ceil(length / chunk_size), 1)
 
                 try:
-                    ws.send(base64.b64encode(zlib.compress(chunk)))
+                    ws.send(base64.b64encode(zlib.compress(chunk)).decode())
                 except (websocket.WebSocketException, WindowsError, ConnectionError, OSError) as e:
                     print(e)
                     if timer.is_alive():
@@ -827,11 +848,14 @@ class FileManager(customtkinter.CTkFrame):
 
 
                     ws.close()
+                    timer.cancel()
                     progress_bar.destroy()
                     return
 
-                timer = threading.Timer(15, ws.close)
-                canceled = False
+                finally:
+                    timer.cancel()
+
+                timer = threading.Timer(60, ws.close)
                 timer.start()
 
                 try:
