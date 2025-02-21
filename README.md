@@ -67,7 +67,8 @@ Setup can be done pretty quickly!<br>
 
  - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `controller.py` to control any connected clients
 
-![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/8a74f54f-3f74-4f78-8a4a-bbcb5648611f)
+![image](https://github.com/user-attachments/assets/d09f5be4-9806-4b0b-9ac5-282f62aa74b4)
+
 
 
 ### Extra
