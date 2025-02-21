@@ -27,8 +27,8 @@ This tool is able to do all of these tasks, all at once
  - File Manager
  - Auto Spread through discord
  - KeyLogging
- - Reverse Shell (License Required)
- - Spyware accessing, camera, microphone, and screen display (License Required)
+ - Reverse Shell
+ - Spyware accessing, camera, microphone, and screen display
  - Disable CMD, Registry Editor, TaskMGR, as well as all of the Power buttons including, shut off, restart and sleep
  - Disables Windows Defender
  - Undetected by Windows Defender
@@ -78,13 +78,13 @@ If you want you can change wallpaper.jpg and annoy.mp3 to whatever you want. Jus
 
 For Instructions.txt you can also change it to whatever you want but, if you want instead of putting your wallet address and the amount of money into the file you can use `WALLET` and `AMOUNT` and the program will automatically replace them
 
-# Getting a License
+# Extra
 
-This is only the Open Source version of the client, if you'd like to gain access to the more advanced features like, better obfuscation go to the Offical [Discord Server](https://discord.gg/3xh6ku7HxX)
+Check out the Offical [Discord Server](https://discord.gg/3xh6ku7HxX)
 
 # Support
 If you you'd like to report any bugs or ask for support go to my [Discord Server](https://discord.gg/3xh6ku7HxX)
 
 # Disclaimer
 
-Do not use this tool to remotely access anyone's computer without their consent, for that is illegal by federal law.
+Do not use this tool to remotely access anyone's computer without their consent, because that's not only illegal but morally wrong, PLEASE only use this tool for pentesting or fun on YOUR OWN virtual machines
