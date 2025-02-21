@@ -86,6 +86,6 @@ Check out the Offical [Discord Server](https://discord.gg/3xh6ku7HxX)
 # Support
 If you you'd like to report any bugs or ask for support go to my [Discord Server](https://discord.gg/3xh6ku7HxX)
 
-# Disclaimer
+# Disclaimer and Misuse ⚠
 
 Do not use this tool to remotely access anyone's computer without their consent, because that's not only illegal but morally wrong, PLEASE only use this tool for pentesting or fun on YOUR OWN virtual machines
