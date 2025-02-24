@@ -25,7 +25,7 @@ This tool is able to do all of these tasks, all at once
  - Trollware
  - Ransomware
  - File Manager
- - Auto Spread through discord
+ - Auto Spread
  - KeyLogging
  - Reverse Shell
  - Spyware accessing, camera, microphone, and screen display
@@ -36,18 +36,17 @@ This tool is able to do all of these tasks, all at once
  - Blocks AV sites
  - Incredibly Accurate VM Detection
  - Bypasses VirusTotal
- - Grabs all Browser credentials, including, Passwords, Cookies, Browser History, and Payment Methods
+ - Grabs chromium credentials, including, Passwords, Cookies, Browser History, and Payment Methods
  - Constantly searches for processes like `Process Hacker` or `Wire Shark` and closes them immediately
- - Grabs Discord tokens, and Roblox cookies
 
 https://www.virustotal.com/gui/file/f0000196e13bf8c69cb7991eeb9e231184de3daa13a6cc463d940d103fc4e0fb/detection <br>
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/e9782a60-d1da-43b4-89dc-c9b76cf2ec43)
 
 
-# Setup
+# Usage
 
 
-Setup can be done pretty quickly!<br>
+The client uses a command and control server via flask, the server setup tutorial is below: <br>
 [Full tutorial here](https://www.veed.io/view/051c67a5-13a0-46bd-869f-1709f72eed36?panel=share)
 
 
@@ -65,7 +64,7 @@ Setup can be done pretty quickly!<br>
 
  - Then run it on a target machine and it should connect
 
- - To see your keylogs check the logs folder on the replit, everything else will be sent to your discord webhook and finally run `controller.py` to control any connected clients
+ - finally run `controller.py` to control any connected clients
 
 ![image](https://github.com/user-attachments/assets/d09f5be4-9806-4b0b-9ac5-282f62aa74b4)
 
@@ -73,7 +72,7 @@ Setup can be done pretty quickly!<br>
 
 ### Extra
 
-If you go into the `src\files` directory you'll find some files that the Rat load will put onto their pc when the Ransomware runs
+If you go into the `src\files` directory you'll find some files that the Rat uses when the Ransomware runs
 
 If you want you can change wallpaper.jpg and annoy.mp3 to whatever you want. Just keep the filenames the same
 
@@ -88,4 +87,4 @@ If you you'd like to report any bugs or ask for support go to my [Discord Server
 
 # Disclaimer and Misuse ⚠
 
-Do not use this tool to remotely access anyone's computer without their consent, because that's not only illegal but morally wrong, PLEASE only use this tool for pentesting or fun on YOUR OWN virtual machines
+Do not use this tool to remotely access anyone's computer without their consent, because that's not only illegal but morally wrong, PLEASE only use this tool for pentesting or recreational purposes on YOUR OWN virtual machines
