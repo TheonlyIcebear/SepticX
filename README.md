@@ -1,6 +1,6 @@
 # SepticX 🐀
 
-An advanced python Rat Client capable of many malicious tasks
+An advanced python Rat Client capable of many windows exploits for pentesting
 
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/f450d92d-a3d4-4117-a3b6-81c40dd09825)
 
