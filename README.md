@@ -66,8 +66,7 @@ The client uses a command and control server via flask, the server setup tutoria
 
  - finally run `controller.py` to control any connected clients
 
-![image](https://github.com/user-attachments/assets/d09f5be4-9806-4b0b-9ac5-282f62aa74b4)
-
+![image](https://github.com/user-attachments/assets/4800bd7a-f1ff-4e49-abfa-752f3fd8cde8)
 
 
 ### Extra
