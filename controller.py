@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from tkinter import *
 from CTkToolTip import *
 from random import randbytes
@@ -365,11 +366,12 @@ class Video(customtkinter.CTkToplevel):
         threading.Thread(target=ws.run_forever).start()
 
     def on_open(self, ws):
+        print("STARTING")
         ws.send(self.server_key)
         ws.send(self.target)
 
     def on_message(self, ws, recv_data):
-        image = Image.open(io.BytesIO(zlib.decompress(base64.b64decode(recv_data))))
+        image = Image.open(io.BytesIO(zlib.decompress(recv_data)))
         self.update_display(image)
 
     def kill_proc(self):
@@ -403,7 +405,7 @@ class Video(customtkinter.CTkToplevel):
         widget_height = self.screen.winfo_height()
 
         normalized_x = event.x / widget_width / 0.8
-        normalized_y = event.y / widget_height / 0.92
+        normalized_y = event.y / widget_height / 0.8
 
         self.handle_click(normalized_x, normalized_y)
 
@@ -504,7 +506,7 @@ class Audio(customtkinter.CTkToplevel):
         while not self.stop:
             GAIN = self.slider.get() / 100
             try:
-                audio_data = zlib.decompress(base64.b64decode(ws.recv()))
+                audio_data = zlib.decompress(ws.recv())
             
                 audio_np = np.frombuffer(audio_data, dtype=np.int16)
                 audio_np = np.clip(audio_np * GAIN, -32768, 32767).astype(np.int16)
@@ -830,7 +832,7 @@ class FileManager(customtkinter.CTkFrame):
                         count += 1
 
                     try:
-                        file.write(zlib.decompress(base64.b64decode(data)))
+                        file.write(zlib.decompress(data))
                     except zlib.error as z:
                         print(z)
 
@@ -893,7 +895,7 @@ class FileManager(customtkinter.CTkFrame):
                 progress = min((count + 1) / math.ceil(length / chunk_size), 1)
 
                 try:
-                    ws.send(base64.b64encode(zlib.compress(chunk)).decode())
+                    ws.send(zlib.compress(chunk), websocket.ABNF.OPCODE_BINARY)
                 except (websocket.WebSocketException, WindowsError, ConnectionError, OSError) as e:
                     print(e)
                     if timer.is_alive():
@@ -1134,7 +1136,7 @@ class App(customtkinter.CTk):
             new_profiles = profiles + computers
 
             offline_computers = [] # Load stored computers and assume they're offline
-            for idx, computer in enumerate(profiles):
+            for idx, computer in enumerate(tqdm(profiles)):
                 if computer in computers: # If a computer is in the online list it can't be offline
                     continue
 
@@ -1174,7 +1176,7 @@ class App(customtkinter.CTk):
 
 
             online_computers = [] # Load connected computers and assume they're online
-            for idx, computer in enumerate(computers):
+            for idx, computer in enumerate(tqdm(computers)):
                 
                 vals = computer.split('|')
 
