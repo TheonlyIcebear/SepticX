@@ -448,6 +448,7 @@ class App(customtkinter.CTk):
         default_imports = [
             '--hidden-import','cryptography.hazmat.primitives.asymmetric.ed25519',
             '--hidden-import','cryptography.hazmat.primitives.asymmetric.AESGCM',
+            '--hidden-import','cryptography.hazmat.primitives.ciphers.aead',
             '--hidden-import','pkg_resources.py2_warn',
             '--hidden-import','subprocess',
             '--hidden-import','win32file',
@@ -472,6 +473,7 @@ class App(customtkinter.CTk):
             '--hidden-import','scipy',
             '--hidden-import','shlex',
             '--hidden-import','time',
+            '--hidden-import','zlib',
             '--hidden-import','json',
             '--hidden-import','uuid',
             '--hidden-import','math',
