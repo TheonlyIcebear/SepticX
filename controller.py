@@ -404,8 +404,8 @@ class Video(customtkinter.CTkToplevel):
         widget_width = self.screen.winfo_width()
         widget_height = self.screen.winfo_height()
 
-        normalized_x = event.x / widget_width / 0.8
-        normalized_y = event.y / widget_height / 0.8
+        normalized_x = event.x / (widget_width * 0.8)
+        normalized_y = event.y / (widget_height * 0.92)
 
         self.handle_click(normalized_x, normalized_y)
 
@@ -816,20 +816,24 @@ class FileManager(customtkinter.CTkFrame):
         with open(filename, 'ab') as file:
             while True:
                 try:
+                    print("Waiting for data...")
+
+                    timer = threading.Timer(60, ws.close)
+                    timer.start()
+
                     data = ws.recv()
+                    count += 1
+
                     
                     print(count, data)
 
-                    if data == "FIN":
+                    if data == "FIN" or not data:
                         if (count) > (file_size // chunk_size):
                             print(data, chunk_size, count)
                             progress_bar.destroy()
                             break
                         else:
                             continue
-
-                    else:
-                        count += 1
 
                     try:
                         file.write(zlib.decompress(data))
@@ -1123,6 +1127,8 @@ class App(customtkinter.CTk):
             self.ws = ws
 
     def update_profiles(self, main_frame, computers=None):
+        ip_data = {}
+
         if computers == self.computers:
             self.after(1000, self.update_profiles, main_frame, computers)
             return
@@ -1151,26 +1157,32 @@ class App(customtkinter.CTk):
                 else:
                     version = "Beta"
 
-                tries = 5
-                while tries != 0:
-                    
-                    try:
-                        request = requests.get(f"http://ip-api.com/json/{ip_address}")
-                        ipinfo = request.json()
+                if not ip_address in ip_data:
+                    tries = 5
+                    while tries != 0:
                         
-                        if 'country' not in ipinfo:
-                            time.sleep(1)
-                            tries -= 1
-                            continue
+                        try:
+                            request = requests.get(f"http://ip-api.com/json/{ip_address}")
+                            ipinfo = request.json()
+                            
+                            if 'country' not in ipinfo:
+                                time.sleep(1)
+                                tries -= 1
+                                continue
 
-                        country = ipinfo['country']
-                        break
-                    except:
-                        tries -= 1
-                        time.sleep(1)
+                            country = ipinfo['country']
+                            break
+                        except:
+                            tries -= 1
+                            time.sleep(1)
+
+                    else:
+                        country = "Rate Limited"
+
+                    ip_data[ip_address] = country
 
                 else:
-                    country = "Rate Limited"
+                    country = ip_data[ip_address]
 
                 offline_computers.append([country, username, ip_address, "Offline", version, "More Options"])
 
@@ -1219,27 +1231,32 @@ class App(customtkinter.CTk):
 
                 #     status = f"Idle: {converted_time} {units}"
 
-                tries = 5
-                while tries != 0:
-                    
-                    try:
-                        request = requests.get(f"http://ip-api.com/json/{ip_address}")
-                        ipinfo = request.json()
+                if not ip_address in ip_data:
+                    tries = 5
+                    while tries != 0:
                         
-                        if 'country' not in ipinfo:
-                            time.sleep(1)
-                            tries -= 1
-                            continue
+                        try:
+                            request = requests.get(f"http://ip-api.com/json/{ip_address}")
+                            ipinfo = request.json()
+                            
+                            if 'country' not in ipinfo:
+                                time.sleep(1)
+                                tries -= 1
+                                continue
 
-                        country = ipinfo['country']
-                        break
-                    except Exception as e:
-                        tries -= 1
-                        print(e)
-                        time.sleep(1)
+                            country = ipinfo['country']
+                            break
+                        except:
+                            tries -= 1
+                            time.sleep(1)
+
+                    else:
+                        country = "Rate Limited"
+
+                    ip_data[ip_address] = country
 
                 else:
-                    country = "Rate Limited"
+                    country = ip_data[ip_address]
 
                 if computer not in profiles:
                     threading.Thread(target=self.toast.show_toast, args=("SepticX", f"New client connected! {computer}")).start()
