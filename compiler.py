@@ -457,20 +457,16 @@ class App(customtkinter.CTk):
             '--hidden-import','requests',
             '--hidden-import','winsound', 
             '--hidden-import','win32api',
-            '--hidden-import','tempfile',
             '--hidden-import','win32gui', 
             '--hidden-import','win32con',
             '--hidden-import','win32ui', 
-            '--hidden-import','marshal',
             '--hidden-import','random',  
             '--hidden-import','winreg',
             '--hidden-import','base64',
             '--hidden-import','psutil',
             '--hidden-import','shutil',
             '--hidden-import','string',
-            '--hidden-import','msvcrt', 
             '--hidden-import','ctypes',
-            '--hidden-import','scipy',
             '--hidden-import','shlex',
             '--hidden-import','time',
             '--hidden-import','zlib',
@@ -524,6 +520,7 @@ class App(customtkinter.CTk):
 
         command = [
                 'python', '-m', 'PyInstaller', '--noconfirm', '--windowed' if windowed else '', '--onefile', '--clean',
+                '--upx-dir', 'build\\upx', '--upx-exclude', '_uuid.pyd', '--upx-exclude', 'python3.dll'
             ] + imports + [
                 '--icon', icon if icon else 'NONE', 
                 '--workpath', 'build', 
