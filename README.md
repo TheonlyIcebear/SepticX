@@ -20,12 +20,12 @@ An advanced python Rat Client capable of many windows exploits for pentesting
 
 This tool is able to do all of these tasks, all at once
 
- - Completely FUD
+ - FUD to Windows Defender
  - Add's to startup
  - Trollware
  - Ransomware
  - File Manager
- - Auto Spread
+ - Hijacking Discord Client
  - KeyLogging
  - Reverse Shell
  - Spyware accessing, camera, microphone, and screen display
