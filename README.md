@@ -10,10 +10,6 @@ An advanced python Rat Client capable of many windows exploits for pentesting
 
 ![image](https://github.com/user-attachments/assets/62df1880-c193-4409-804b-33980a53b920)
 
-![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/191cc65e-0fa4-4946-a62f-6782ef6fa1c1)
-
-![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/37aebb7b-fb65-4ffe-ac57-45a2515fd473)
-
 
 
 # Features
