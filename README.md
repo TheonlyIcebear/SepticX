@@ -17,21 +17,12 @@ This tool is able to do all of these tasks, all at once
  - FUD to Windows Defender
  - Add's to startup
  - Trollware
- - Ransomware
  - File Manager
- - Hijacking Discord Client
  - KeyLogging
  - Reverse Shell
  - Spyware accessing, camera, microphone, and screen display
  - Disable CMD, Registry Editor, TaskMGR, as well as all of the Power buttons including, shut off, restart and sleep
- - Disables Windows Defender
- - Undetected by Windows Defender
- - UAC Bypass
- - Blocks AV sites
- - Incredibly Accurate VM Detection
- - Bypasses VirusTotal
- - Grabs chromium credentials, including, Passwords, Cookies, Browser History, and Payment Methods
- - Constantly searches for processes like `Process Hacker` or `Wire Shark` and closes them immediately
+ - Grabs chromium credentials, including, Passwords, Cookies, Browser History, and Payment Methods (deprecated in new Chromium versions)
 
 https://www.virustotal.com/gui/file/f0000196e13bf8c69cb7991eeb9e231184de3daa13a6cc463d940d103fc4e0fb/detection <br>
 ![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/e9782a60-d1da-43b4-89dc-c9b76cf2ec43)
