@@ -2,8 +2,6 @@
 
 An advanced python Rat Client capable of many windows exploits for pentesting
 
-![image](https://github.com/TheonlyIcebear/SepticX/assets/78031685/f450d92d-a3d4-4117-a3b6-81c40dd09825)
-
 ![image](https://github.com/user-attachments/assets/62f919b1-b974-42d2-abe6-dfb6e56e1c4a)
 
 ![image](https://github.com/user-attachments/assets/d1b42077-b80d-4c4e-93a4-a84508e558de)
