@@ -32,7 +32,6 @@ https://www.virustotal.com/gui/file/f0000196e13bf8c69cb7991eeb9e231184de3daa13a6
 
 
 The client uses a command and control server via flask, the server setup tutorial is below: <br>
-[Full tutorial here](https://www.veed.io/view/051c67a5-13a0-46bd-869f-1709f72eed36?panel=share)
 
 
  - Upload the contents of the server folder into replit
